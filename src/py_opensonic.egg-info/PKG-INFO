@@ -1,0 +1,23 @@
+Metadata-Version: 2.1
+Name: py-opensonic
+Version: 1.0.0
+Summary: A python wrapper library for the Open Subsonic REST API.  https://opensubsonic.netlify.app/
+Home-page: https://github.com/khers/py-opensonic
+Author: Eric B. Munson
+Author-email: eric@munsonfam.org
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: System Administrators
+Classifier: Intended Audience :: Information Technology
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Natural Language :: English
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python
+Classifier: Topic :: System :: Systems Administration
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: System
+Requires-Python: >=3
+License-File: LICENSE
+
+This is a basic wrapper library for the Open Subsonic REST API. This will allow you to connect to your server and retrieve information and have it returned in basic Python types.

@@ -1,41 +1,41 @@
 #!/usr/bin/env python3
 
 """
-This file is part of py-sonic.
+This file is part of py-opensonic.
 
 py-sonic is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-py-sonic is distributed in the hope that it will be useful,
+py-opensonic is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with py-sonic.  If not, see <http://www.gnu.org/licenses/>
+along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from setuptools import setup
-from libsonic import __version__ as version
 import os
+from setuptools import setup,find_packages
 
 req_file = os.path.join(os.path.dirname(__file__), 'requirements.txt')
-requirements = [line for line in open(req_file) if line]
+with open(req_file, encoding="utf-8") as file:
+    requirements = [line for line in file if line]
 
-setup(name='py-sonic',
-    version=version,
-    author='Jay Deiman',
-    author_email='admin@splitstreams.com',
-    url='http://stuffivelearned.org',
-    description='A python wrapper library for the Subsonic REST API.  '
-        'http://subsonic.org',
-    long_description='This is a basic wrapper library for the Subsonic '
+setup(name='py-opensonic',
+    version='1.0.0',
+    author='Eric B. Munson',
+    author_email='eric@munsonfam.org',
+    url='https://github.com/khers/py-opensonic',
+    description='A python wrapper library for the Open Subsonic REST API.  '
+        'https://opensubsonic.netlify.app/',
+    long_description='This is a basic wrapper library for the Open Subsonic '
         'REST API. This will allow you to connect to your server and retrieve '
         'information and have it returned in basic Python types.',
-    packages=['libsonic'],
-    package_dir={'libsonic': 'libsonic'},
+    package_dir={'': 'src'},
+    packages=find_packages('src'),
     install_requires=requirements,
     python_requires='>=3',
     classifiers=[
