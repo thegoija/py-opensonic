@@ -1,28 +1,31 @@
-# py-sonic #
+# py-opensonic #
 
-## Python 2 is dead ##
-I'm discontinuing support for Python 2 at this point.  I'm no longer supporting the six hacks.  Everything > 0.6.2 will be Python 3 only.
+A python library for interacting with an Open Subsonic API implementation.
+This started its life as the [py-sonic](https://github.com/crustymonkey/py-sonic) library.
+I have tested with Gonic (and continue to do so against each stable docker
+release). Please open issues if you discover problems with other implementations.
 
 ## INSTALL ##
 
 Installation is fairly simple.  Just do the standard install as root:
 
-    tar -xvzf py-sonic-*.tar.gz
-    cd py-sonic-*
+    tar -xvzf py-opensonic-*.tar.gz
+    cd py-opensonic-*
     python setup.py install
 
 You can also install directly using *pip* or *easy_install*
 
-    pip install py-sonic
+    pip install py-opensonic
 
 ## USAGE ##
 
 This library follows the REST API almost exactly (for now).  If you follow the 
-documentation on http://www.subsonic.org/pages/api.jsp or you do a:
+documentation on https://opensubsonic.netlify.app/docs/ or you do a:
 
-    pydoc libsonic.connection
+    pydoc libopensonic.connection
 
-I have also added documentation at http://stuffivelearned.org/doku.php?id=programming:python:py-sonic
+The py-sonic original author has added documentation at
+http://stuffivelearned.org/doku.php?id=programming:python:py-sonic
 
 ## BASIC TUTORIAL ##
 
@@ -33,11 +36,11 @@ and then get a couple of random songs.
 #!/usr/bin/env python
 
 from pprint import pprint
-import libsonic
+import libopensonic
 
 # We pass in the base url, the username, password, and port number
 # Be sure to use https:// if this is an ssl connection!
-conn = libsonic.Connection('https://music.example.com' , 'myuser' , 
+conn = libopensonic.Connection('https://music.example.com' , 'myuser' , 
     'secretpass' , port=443)
 # Let's get 2 completely random songs
 songs = conn.getRandomSongs(size=2)
@@ -48,17 +51,19 @@ pprint(songs)
 As you can see, it's really pretty simple.  If you use the documentation 
 provided in the library:
 
-    pydoc libsonic.connection
+    pydoc libopensonic.connection
 
-or the api docs on subsonic.org (listed above), you should be able to make use
-of your server without too much trouble.
+or the api docs on opensubsonic.netlify.app (listed above), you should be
+able to make use of your server without too much trouble.
 
-Right now, only plain old dictionary structures are returned.  The plan 
-for a later release includes the following:
+Right now, only plain old dictionary structures are returned.
 
+I may choose to do any of the following things on the original author's
+TODO list:
 * Proper object representations for Artist, Album, Song, etc.
 * Lazy access of members (the song objects aren't created until you want to
   do something with them)
+However, I want to try and use the presented API first.
 
 ## TODO ##
 
