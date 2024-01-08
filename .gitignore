@@ -3,3 +3,4 @@ test.py
 MANIFEST
 dist
 build
+py_opensonic.egg-info
