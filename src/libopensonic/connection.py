@@ -25,8 +25,7 @@ from io import StringIO
 import json
 import os
 
-from src.libopensonic.errors import *
-
+from . import errors
 
 API_VERSION = '1.16.1'
 
@@ -112,7 +111,7 @@ class Connection:
         if useNetrc is not None:
             self._process_netrc(useNetrc)
         elif username is None or password is None:
-            raise CredentialError('You must specify either a username/password '
+            raise errors.CredentialError('You must specify either a username/password '
                 'combination or "useNetrc" must be either True or a string '
                 'representing a path to a netrc file')
 
@@ -193,7 +192,7 @@ class Connection:
         if res['status'] == 'ok':
             return True
         elif res['status'] == 'failed':
-            exc = getExcByCode(res['error']['code'])
+            exc = errors.getExcByCode(res['error']['code'])
             raise exc(res['error']['message'])
         return False
 
@@ -477,7 +476,7 @@ class Connection:
         newerThan:int   Return matches newer than this timestamp
         """
         if artist == album == title == any == None:
-            raise ArgumentError('Invalid search.  You must supply search '
+            raise errors.ArgumentError('Invalid search.  You must supply search '
                 'criteria')
         methodName = 'search'
 
@@ -729,9 +728,9 @@ class Connection:
             songIds = []
 
         if playlistId == name == None:
-            raise ArgumentError('You must supply either a playlistId or a name')
+            raise errors.ArgumentError('You must supply either a playlistId or a name')
         if playlistId is not None and name is not None:
-            raise ArgumentError('You can only supply either a playlistId '
+            raise errors.ArgumentError('You can only supply either a playlistId '
                  'OR a name, not both')
 
         q = self._getQueryDict({'playlistId': playlistId, 'name': name})
@@ -1460,7 +1459,7 @@ class Connection:
         if action == 'add':
             # We have to deal with the sids
             if not (isinstance(sids, list) or isinstance(sids, tuple)):
-                raise ArgumentError('If you are adding songs, "sids" must '
+                raise errors.ArgumentError('If you are adding songs, "sids" must '
                     'be a list or tuple!')
             req = self._getRequestWithList(methodName, 'id', sids, q)
         else:
@@ -1665,10 +1664,10 @@ class Connection:
         try:
             rating = int(rating)
         except Exception as exc:
-            raise ArgumentError('Rating must be an integer between 0 and 5: '
+            raise errors.ArgumentError('Rating must be an integer between 0 and 5: '
                 '%r' % rating) from exc
         if rating < 0 or rating > 5:
-            raise ArgumentError('Rating must be an integer between 0 and 5: '
+            raise errors.ArgumentError('Rating must be an integer between 0 and 5: '
                 '%r' % rating)
 
         q = self._getQueryDict({'id': item_id, 'rating': rating})
@@ -2839,7 +2838,7 @@ class Connection:
         if result['status'] == 'ok':
             return True
         elif result['status'] == 'failed':
-            exc = getExcByCode(result['error']['code'])
+            exc = errors.getExcByCode(result['error']['code'])
             raise exc(result['error']['message'])
 
 
@@ -2904,7 +2903,7 @@ class Connection:
                                 netrc file to use
         """
         if not use_netrc:
-            raise CredentialError('useNetrc must be either a boolean "True" '
+            raise errors.CredentialError('useNetrc must be either a boolean "True" '
                 'or a string representing a path to a netrc file, '
                 'not {0}'.format(repr(use_netrc)))
         if isinstance(use_netrc, bool) and use_netrc:
@@ -2914,7 +2913,7 @@ class Connection:
             self._netrc = netrc(os.path.expanduser(use_netrc))
         auth = self._netrc.authenticators(self._hostname)
         if not auth:
-            raise CredentialError('No machine entry found for {0} in '
+            raise errors.CredentialError('No machine entry found for {0} in '
                 'your netrc file'.format(self._hostname))
 
         # If we get here, we have credentials

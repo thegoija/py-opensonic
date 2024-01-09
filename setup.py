@@ -17,25 +17,42 @@ You should have received a copy of the GNU General Public License
 along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 """
 
-import os
+import re
+from pathlib import Path
 from setuptools import setup,find_packages
 
-req_file = os.path.join(os.path.dirname(__file__), 'requirements.txt')
-with open(req_file, encoding="utf-8") as file:
-    requirements = [line for line in file if line]
+
+# read the contents of your README file
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+requirements = (this_directory / 'requirements.txt').read_text()
+
+# Get package __version__ in our namespace
+ver_path = (this_directory / 'src' / 'libopensonic' / '_version.py')
+verstr = 'unknown'
+try:
+    verstrline = open(ver_path, "rt").read()
+except EnvironmentError:
+    pass # Okay, there is no version file.
+else:
+    VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+    mo = re.search(VSRE, verstrline, re.M)
+    if mo:
+        verstr = mo.group(1)
+    else:
+        raise RuntimeError("unable to find version in yourpackage/_version.py")
 
 setup(name='py-opensonic',
-    version='1.0.0',
+    version=verstr,
     author='Eric B. Munson',
     author_email='eric@munsonfam.org',
     url='https://github.com/khers/py-opensonic',
     description='A python wrapper library for the Open Subsonic REST API.  '
         'https://opensubsonic.netlify.app/',
-    long_description='This is a basic wrapper library for the Open Subsonic '
-        'REST API. This will allow you to connect to your server and retrieve '
-        'information and have it returned in basic Python types.',
+    long_description=long_description,
     package_dir={'': 'src'},
     packages=find_packages('src'),
+    py_modules=['libopensonic'],
     install_requires=requirements,
     python_requires='>=3',
     classifiers=[

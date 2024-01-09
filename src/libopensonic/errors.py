@@ -18,26 +18,34 @@ along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 class SonicError(Exception):
     pass
 
+
 class ParameterError(SonicError):
     pass
+
 
 class VersionError(SonicError):
     pass
 
+
 class CredentialError(SonicError):
     pass
+
 
 class AuthError(SonicError):
     pass
 
+
 class LicenseError(SonicError):
     pass
+
 
 class DataNotFoundError(SonicError):
     pass
 
+
 class ArgumentError(SonicError):
     pass
+
 
 # This maps the error code numbers from the Subsonic server to their
 # appropriate Exceptions
