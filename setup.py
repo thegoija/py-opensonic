@@ -50,6 +50,7 @@ setup(name='py-opensonic',
     description='A python wrapper library for the Open Subsonic REST API.  '
         'https://opensubsonic.netlify.app/',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     package_dir={'': 'src'},
     packages=find_packages('src'),
     py_modules=['libopensonic'],
