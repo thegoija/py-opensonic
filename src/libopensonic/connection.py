@@ -26,6 +26,12 @@ import json
 import os
 
 from . import errors
+from .media.podcast_channel import PodcastChannel
+from .media.podcast_episode import PodcastEpisode
+from .media.artist import (Artist, ArtistInfo)
+from .media.song import (Song)
+from .media.album import (Album, AlbumInfo)
+from .media.index import Index
 
 API_VERSION = '1.16.1'
 
@@ -325,38 +331,17 @@ class Connection:
 
         Returns what is currently being played by all users
 
-        Returns a dict like the following:
-
-        {u'nowPlaying': {u'entry': {u'album': u"Jazz 'Round Midnight 12",
-                            u'artist': u'Astrud Gilberto',
-                            u'bitRate': 172,
-                            u'contentType': u'audio/mpeg',
-                            u'coverArt': u'98349284',
-                            u'duration': 325,
-                            u'genre': u'Jazz',
-                            u'id': u'2424324',
-                            u'isDir': False,
-                            u'isVideo': False,
-                            u'minutesAgo': 0,
-                            u'parent': u'542352',
-                            u'path': u"Astrud Gilberto/Jazz 'Round Midnight 12/01 - The Girl From Ipanema.mp3",
-                            u'playerId': 1,
-                            u'size': 7004089,
-                            u'suffix': u'mp3',
-                            u'title': u'The Girl From Ipanema',
-                            u'track': 1,
-                            u'username': u'user1',
-                            u'year': 1996}},
-         u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns a dict of username string to media.Album
         """
         methodName = 'getNowPlaying'
 
         req = self._getRequest(methodName)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        playing = {}
+        for entry in res['nowPlaying']['entry']:
+            playing[entry['username']] = Album(entry)
+        return playing
 
 
     def getIndexes(self, musicFolderId=None, ifModifiedSince=0):
@@ -372,22 +357,8 @@ class Connection:
                                 collection has changed since the given
                                 unix timestamp
 
-        Returns a dict like the following:
+        Returns a list of media.Index
 
-        {u'indexes': {u'index': [{u'artist': [{u'id': u'29834728934',
-                                       u'name': u'A Perfect Circle'},
-                                      {u'id': u'238472893',
-                                       u'name': u'A Small Good Thing'},
-                                      {u'id': u'9327842983',
-                                       u'name': u'A Tribe Called Quest'},
-                                      {u'id': u'29348729874',
-                                       u'name': u'A-Teens, The'},
-                                      {u'id': u'298472938',
-                                       u'name': u'ABA STRUCTURE'}],
-                      u'lastModified': 1303318347000L},
-         u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getIndexes'
 
@@ -398,7 +369,10 @@ class Connection:
         res = self._doInfoReq(req)
         self._checkStatus(res)
         self._fixLastModified(res)
-        return res
+        indices = []
+        for entry in res['indexes']['index']:
+            indices.append(Index(entry))
+        return indices
 
 
     def getMusicDirectory(self, mid):
@@ -515,37 +489,8 @@ class Connection:
         musicFolderId:int   Only return results from the music folder
                             with the given ID. See getMusicFolders
 
-        Returns a dict like the following:
-
-        {u'searchResult2': {u'album': [{u'artist': u'A Tribe Called Quest',
-                                u'coverArt': u'289347',
-                                u'id': u'32487298',
-                                u'isDir': True,
-                                u'parent': u'98374289',
-                                u'title': u'The Love Movement'}],
-                    u'artist': [{u'id': u'2947839',
-                                 u'name': u'A Tribe Called Quest'},
-                                {u'id': u'239847239',
-                                 u'name': u'Tribe'}],
-                    u'song': [{u'album': u'Beats, Rhymes And Life',
-                               u'artist': u'A Tribe Called Quest',
-                               u'bitRate': 224,
-                               u'contentType': u'audio/mpeg',
-                               u'coverArt': u'329847',
-                               u'duration': 148,
-                               u'genre': u'default',
-                               u'id': u'3928472893',
-                               u'isDir': False,
-                               u'isVideo': False,
-                               u'parent': u'23984728394',
-                               u'path': u'A Tribe Called Quest/Beats, Rhymes And Life/A Tribe Called Quest - Beats, Rhymes And Life - 03 - Motivators.mp3',
-                               u'size': 4171913,
-                               u'suffix': u'mp3',
-                               u'title': u'Motivators',
-                               u'track': 3}]},
-         u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns a dict containing 3 keys, 'artists', 'albums', and 'songs' with each
+        holding a list of media.Artist, media.Album, or media.Song respectively
         """
         methodName = 'search2'
 
@@ -557,7 +502,14 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        found = {'artists': [], 'albums': [], 'songs': []}
+        for entry in res['searchResults3']['artist']:
+            found['artists'].append(Artist(entry))
+        for entry in res['searchResults3']['album']:
+            found['albums'].append(Album(entry))
+        for entry in res['searchResults3']['song']:
+            found['songs'].append(Song(entry))
+        return found
 
 
     def search3(self, query, artistCount=20, artistOffset=0, albumCount=20,
@@ -578,52 +530,8 @@ class Connection:
         musicFolderId:int   Only return results from the music folder
                             with the given ID. See getMusicFolders
 
-        Returns a dict like the following (search for "Tune Yards":
-            {u'searchResult3': {u'album': [{u'artist': u'Tune-Yards',
-                                u'artistId': 1,
-                                u'coverArt': u'al-7',
-                                u'created': u'2012-01-30T12:35:33',
-                                u'duration': 3229,
-                                u'id': 7,
-                                u'name': u'Bird-Brains',
-                                u'songCount': 13},
-                               {u'artist': u'Tune-Yards',
-                                u'artistId': 1,
-                                u'coverArt': u'al-8',
-                                u'created': u'2011-03-22T15:08:00',
-                                u'duration': 2531,
-                                u'id': 8,
-                                u'name': u'W H O K I L L',
-                                u'songCount': 10}],
-                    u'artist': {u'albumCount': 2,
-                                u'coverArt': u'ar-1',
-                                u'id': 1,
-                                u'name': u'Tune-Yards'},
-                    u'song': [{u'album': u'Bird-Brains',
-                               u'albumId': 7,
-                               u'artist': u'Tune-Yards',
-                               u'artistId': 1,
-                               u'bitRate': 160,
-                               u'contentType': u'audio/mpeg',
-                               u'coverArt': 105,
-                               u'created': u'2012-01-30T12:35:33',
-                               u'duration': 328,
-                               u'genre': u'Lo-Fi',
-                               u'id': 107,
-                               u'isDir': False,
-                               u'isVideo': False,
-                               u'parent': 105,
-                               u'path': u'Tune Yards/Bird-Brains/10-tune-yards-fiya.mp3',
-                               u'size': 6588498,
-                               u'suffix': u'mp3',
-                               u'title': u'Fiya',
-                               u'track': 10,
-                               u'type': u'music',
-                               u'year': 2009}]},
-
-             u'status': u'ok',
-             u'version': u'1.5.0',
-             u'xmlns': u'http://subsonic.org/restapi'}
+        Returns a dict containing 3 keys, 'artists', 'albums', and 'songs' with each
+        holding a list of media.Artist, media.Album, or media.Song respectively
         """
         methodName = 'search3'
 
@@ -635,7 +543,14 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        found = {'artists': [], 'albums': [], 'songs': []}
+        for entry in res['searchResults3']['artist']:
+            found['artists'].append(Artist(entry))
+        for entry in res['searchResults3']['album']:
+            found['albums'].append(Album(entry))
+        for entry in res['searchResults3']['song']:
+            found['songs'].append(Song(entry))
+        return found
 
 
     def getPlaylists(self, username=None):
@@ -1196,22 +1111,7 @@ class Connection:
         musicFolderId:str   Only return albums in the music folder with
                             the given ID. See getMusicFolders()
 
-        Returns a dict like the following:
-
-        {u'albumList': {u'album': [{u'artist': u'Hank Williams',
-                            u'id': u'3264928374',
-                            u'isDir': True,
-                            u'parent': u'9238479283',
-                            u'title': u'The Original Singles Collection...Plus'},
-                           {u'artist': u'Freundeskreis',
-                            u'coverArt': u'9823749823',
-                            u'id': u'23492834',
-                            u'isDir': True,
-                            u'parent': u'9827492374',
-                            u'title': u'Quadratur des Kreises'}]},
-         u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns a list of media.Album
         """
         methodName = 'getAlbumList'
 
@@ -1222,7 +1122,10 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        albums = []
+        for entry in res['albumList']['album']:
+            albums.append(Album(entry))
+        return albums
 
 
     def getAlbumList2(self, ltype, size=10, offset=0, fromYear=None,
@@ -1249,26 +1152,7 @@ class Connection:
         genre:str       The name of the genre e.g. "Rock".  You must specify
                         genre if you set the ltype to "byGenre"
 
-        Returns a dict like the following:
-           {u'albumList2': {u'album': [{u'artist': u'Massive Attack',
-                             u'artistId': 0,
-                             u'coverArt': u'al-0',
-                             u'created': u'2009-08-28T10:00:44',
-                             u'duration': 3762,
-                             u'id': 0,
-                             u'name': u'100th Window',
-                             u'songCount': 9},
-                            {u'artist': u'Massive Attack',
-                             u'artistId': 0,
-                             u'coverArt': u'al-5',
-                             u'created': u'2003-11-03T22:00:00',
-                             u'duration': 2715,
-                             u'id': 5,
-                             u'name': u'Blue Lines',
-                             u'songCount': 9}]},
-            u'status': u'ok',
-            u'version': u'1.8.0',
-            u'xmlns': u'http://subsonic.org/restapi'}
+        Returns a list of media.Album
         """
         methodName = 'getAlbumList2'
 
@@ -1279,7 +1163,10 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        albums = []
+        for entry in res['albumList2']['album']:
+            albums.append(Album(entry))
+        return albums
 
 
     def getRandomSongs(self, size=10, genre=None, fromYear=None,
@@ -1296,39 +1183,7 @@ class Connection:
         musicFolderId:str   Only return songs in the music folder with the
                             given ID.  See getMusicFolders
 
-        Returns a dict like the following:
-
-        {u'randomSongs': {u'song': [{u'album': u'1998 EP - Airbag (How Am I Driving)',
-                             u'artist': u'Radiohead',
-                             u'bitRate': 320,
-                             u'contentType': u'audio/mpeg',
-                             u'duration': 129,
-                             u'id': u'9284728934',
-                             u'isDir': False,
-                             u'isVideo': False,
-                             u'parent': u'983249823',
-                             u'path': u'Radiohead/1998 EP - Airbag (How Am I Driving)/06 - Melatonin.mp3',
-                             u'size': 5177469,
-                             u'suffix': u'mp3',
-                             u'title': u'Melatonin'},
-                            {u'album': u'Mezmerize',
-                             u'artist': u'System Of A Down',
-                             u'bitRate': 214,
-                             u'contentType': u'audio/mpeg',
-                             u'coverArt': u'23849372894',
-                             u'duration': 176,
-                             u'id': u'28937492834',
-                             u'isDir': False,
-                             u'isVideo': False,
-                             u'parent': u'92837492837',
-                             u'path': u'System Of A Down/Mesmerize/10 - System Of A Down - Old School Hollywood.mp3',
-                             u'size': 4751360,
-                             u'suffix': u'mp3',
-                             u'title': u'Old School Hollywood',
-                             u'track': 10}]},
-         u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns a list of media.Song
         """
         methodName = 'getRandomSongs'
 
@@ -1339,7 +1194,10 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        songs = []
+        for entry in res['randomSongs']['song']:
+            songs.append(Song(entry))
+        return songs
 
 
     def getLyrics(self, artist=None, title=None):
@@ -1488,48 +1346,7 @@ class Connection:
         pid:str             (since: 1.9.0) If specified, only return
                             the Podcast channel with this ID.
 
-        Returns a dict like the following:
-        {u'status': u'ok',
-         u'version': u'1.6.0',
-         u'xmlns': u'http://subsonic.org/restapi',
-         u'podcasts': {u'channel': {u'description': u"Dr Chris Smith...",
-                            u'episode': [{u'album': u'Dr Karl and the Naked Scientist',
-                                          u'artist': u'BBC Radio 5 live',
-                                          u'bitRate': 64,
-                                          u'contentType': u'audio/mpeg',
-                                          u'coverArt': u'2f6f7074',
-                                          u'description': u'Dr Karl answers all your science related questions.',
-                                          u'duration': 2902,
-                                          u'genre': u'Podcast',
-                                          u'id': 0,
-                                          u'isDir': False,
-                                          u'isVideo': False,
-                                          u'parent': u'2f6f70742f737562736f6e69632f706f6463617374732f4472204b61726c20616e6420746865204e616b656420536369656e74697374',
-                                          u'publishDate': u'2011-08-17 22:06:00.0',
-                                          u'size': 23313059,
-                                          u'status': u'completed',
-                                          u'streamId': u'2f6f70742f737562736f6e69632f706f6463617374732f4472204b61726c20616e6420746865204e616b656420536369656e746973742f64726b61726c5f32303131303831382d30343036612e6d7033',
-                                          u'suffix': u'mp3',
-                                          u'title': u'DrKarl: Peppermints, Chillies & Receptors',
-                                          u'year': 2011},
-                                         {u'description': u'which is warmer, a bath with bubbles in it or one without?  Just one of the stranger science stories tackled this week by Dr Chris Smith and the Naked Scientists!',
-                                          u'id': 1,
-                                          u'publishDate': u'2011-08-14 21:05:00.0',
-                                          u'status': u'skipped',
-                                          u'title': u'DrKarl: how many bubbles in your bath? 15 AUG 11'},
-                                          ...
-                                         {u'description': u'Dr Karl joins Rhod to answer all your science questions',
-                                          u'id': 9,
-                                          u'publishDate': u'2011-07-06 22:12:00.0',
-                                          u'status': u'skipped',
-                                          u'title': u'DrKarl: 8 Jul 11 The Strange Sound of the MRI Scanner'}],
-                            u'id': 0,
-                            u'status': u'completed',
-                            u'title': u'Dr Karl and the Naked Scientist',
-                            u'url': u'http://downloads.bbc.co.uk/podcasts/fivelive/drkarl/rss.xml'}}
-        }
-
-        See also: http://subsonic.svn.sourceforge.net/viewvc/subsonic/trunk/subsonic-main/src/main/webapp/xsd/podcasts_example_1.xml?view=markup
+        Returns a list of media.PodcastChannel
         """
         methodName = 'getPodcasts'
 
@@ -1538,7 +1355,11 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        channels = []
+        for entry in res['podcasts']['channel']:
+            channels.append(PodcastChannel(entry))
+
+        return channels
 
 
     def getShares(self):
@@ -1692,27 +1513,18 @@ class Connection:
         Similar to getIndexes(), but this method uses the ID3 tags to
         determine the artist
 
-        Returns a dict like the following:
-            {u'artists': {u'index': [{u'artist': {u'albumCount': 7,
-                                      u'coverArt': u'ar-0',
-                                      u'id': 0,
-                                      u'name': u'Massive Attack'},
-                          u'name': u'M'},
-                         {u'artist': {u'albumCount': 2,
-                                      u'coverArt': u'ar-1',
-                                      u'id': 1,
-                                      u'name': u'Tune-Yards'},
-                          u'name': u'T'}]},
-             u'status': u'ok',
-             u'version': u'1.8.0',
-             u'xmlns': u'http://subsonic.org/restapi'}
+        Returns a list of media.Index
         """
         methodName = 'getArtists'
 
         req = self._getRequest(methodName)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+
+        indices = []
+        for entry in res['artists']['index']:
+            indices.append(Index(entry))
+        return indices
 
 
     def getArtist(self, artist_id):
@@ -1724,31 +1536,7 @@ class Connection:
 
         artist_id:str      The artist ID
 
-        Returns a dict like the following:
-
-           {u'artist': {u'album': [{u'artist': u'Tune-Yards',
-                         u'artistId': 1,
-                         u'coverArt': u'al-7',
-                         u'created': u'2012-01-30T12:35:33',
-                         u'duration': 3229,
-                         u'id': 7,
-                         u'name': u'Bird-Brains',
-                         u'songCount': 13},
-                        {u'artist': u'Tune-Yards',
-                         u'artistId': 1,
-                         u'coverArt': u'al-8',
-                         u'created': u'2011-03-22T15:08:00',
-                         u'duration': 2531,
-                         u'id': 8,
-                         u'name': u'W H O K I L L',
-                         u'songCount': 10}],
-             u'albumCount': 2,
-             u'coverArt': u'ar-1',
-             u'id': 1,
-             u'name': u'Tune-Yards'},
-            u'status': u'ok',
-            u'version': u'1.8.0',
-            u'xmlns': u'http://subsonic.org/restapi'}
+        Returns media.Artist
         """
         methodName = 'getArtist'
 
@@ -1757,7 +1545,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return Artist(res['artist'])
 
 
     def getAlbum(self, album_id):
@@ -1769,40 +1557,7 @@ class Connection:
 
         album_id:str      The album ID
 
-        Returns a dict like the following:
-
-           {u'album': {u'artist': u'Massive Attack',
-            u'artistId': 0,
-            u'coverArt': u'al-0',
-            u'created': u'2009-08-28T10:00:44',
-            u'duration': 3762,
-            u'id': 0,
-            u'name': u'100th Window',
-            u'song': [{u'album': u'100th Window',
-                       u'albumId': 0,
-                       u'artist': u'Massive Attack',
-                       u'artistId': 0,
-                       u'bitRate': 192,
-                       u'contentType': u'audio/mpeg',
-                       u'coverArt': 2,
-                       u'created': u'2009-08-28T10:00:57',
-                       u'duration': 341,
-                       u'genre': u'Rock',
-                       u'id': 14,
-                       u'isDir': False,
-                       u'isVideo': False,
-                       u'parent': 2,
-                       u'path': u'Massive Attack/100th Window/01 - Future Proof.mp3',
-                       u'size': 8184445,
-                       u'suffix': u'mp3',
-                       u'title': u'Future Proof',
-                       u'track': 1,
-                       u'type': u'music',
-                       u'year': 2003}],
-              u'songCount': 9},
-            u'status': u'ok',
-            u'version': u'1.8.0',
-            u'xmlns': u'http://subsonic.org/restapi'}
+        Returns a media.Album
         """
         methodName = 'getAlbum'
 
@@ -1811,7 +1566,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return Album(res['album'])
 
 
     def getSong(self, sid):
@@ -1823,32 +1578,7 @@ class Connection:
 
         sid:str      The song ID
 
-        Returns a dict like the following:
-            {u'song': {u'album': u'W H O K I L L',
-               u'albumId': 8,
-               u'artist': u'Tune-Yards',
-               u'artistId': 1,
-               u'bitRate': 320,
-               u'contentType': u'audio/mpeg',
-               u'coverArt': 106,
-               u'created': u'2011-03-22T15:08:00',
-               u'discNumber': 1,
-               u'duration': 192,
-               u'genre': u'Indie Rock',
-               u'id': 120,
-               u'isDir': False,
-               u'isVideo': False,
-               u'parent': 106,
-               u'path': u'Tune Yards/Who Kill/10 Killa.mp3',
-               u'size': 7692656,
-               u'suffix': u'mp3',
-               u'title': u'Killa',
-               u'track': 10,
-               u'type': u'music',
-               u'year': 2011},
-             u'status': u'ok',
-             u'version': u'1.8.0',
-             u'xmlns': u'http://subsonic.org/restapi'}
+        Returns a media.Song
         """
         methodName = 'getSong'
 
@@ -1857,7 +1587,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return Song(res['song'])
 
 
     def getVideos(self):
@@ -2476,7 +2206,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return ArtistInfo(res['artistInfo'])
 
 
     def getArtistInfo2(self, aid, count=20, includeNotPresent=False):
@@ -2498,7 +2228,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return ArtistInfo(res['artistInfo2'])
 
 
     def getSimilarSongs(self, iid, count=50):
@@ -2654,11 +2384,11 @@ class Connection:
         """
         methodName = 'getAlbumInfo'
 
-        q = {'id': int(aid)}
+        q = {'id': aid}
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return AlbumInfo(res['albumInfo'])
 
 
     def getAlbumInfo2(self, aid):
@@ -2671,11 +2401,11 @@ class Connection:
         """
         methodName = 'getAlbumInfo2'
 
-        q = {'id': int(aid)}
+        q = {'id': aid}
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return AlbumInfo(res['albumInfo'])
 
 
     def getCaptions(self, vid, fmt=None):

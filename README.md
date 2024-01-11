@@ -60,7 +60,6 @@ Right now, only plain old dictionary structures are returned.
 
 I may choose to do any of the following things on the original author's
 TODO list:
-* Proper object representations for Artist, Album, Song, etc.
 * Lazy access of members (the song objects aren't created until you want to
   do something with them)
 However, I want to try and use the presented API first.

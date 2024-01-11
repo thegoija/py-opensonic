@@ -13,23 +13,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
-
-For information on method calls, see 'pydoc libsonic.connection'
-
-----------
-Basic example:
-----------
-
-import libsonic
-
-conn = libsonic.Connection('http://localhost' , 'admin' , 'password')
-print conn.ping()
-
 """
 
-__version__ = "unknown"
-try:
-    from libopensonic._version import __version__
-except ImportError:
-    # We're running in a tree that doesn't have a _version.py, so we don't know what our version is.
-    pass
+from .song import Song
+from .album import Album, AlbumInfo
+from .artist import Artist, ArtistInfo
+from .index import Index
+from .podcast_channel import PodcastChannel
+from .podcast_episode import PodcastEpisode
