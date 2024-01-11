@@ -1,3 +1,7 @@
+##2.0.1
+
+Fix result parsing in search3, allow for empty artist, album, or song field.
+
 ## 2.0.0
 
 Create objects for many of the returns from the api end points and rewored Connection object to use these new classes.
