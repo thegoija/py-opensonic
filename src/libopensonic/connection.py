@@ -544,12 +544,16 @@ class Connection:
         res = self._doInfoReq(req)
         self._checkStatus(res)
         found = {'artists': [], 'albums': [], 'songs': []}
-        for entry in res['searchResults3']['artist']:
-            found['artists'].append(Artist(entry))
-        for entry in res['searchResults3']['album']:
-            found['albums'].append(Album(entry))
-        for entry in res['searchResults3']['song']:
-            found['songs'].append(Song(entry))
+        print(str(res))
+        if 'artist' in res['searchResult3']:
+            for entry in res['searchResult3']['artist']:
+                found['artists'].append(Artist(entry))
+        if 'album' in res['searchResult3']:
+            for entry in res['searchResult3']['album']:
+                found['albums'].append(Album(entry))
+        if 'song' in res['searchResult3']:
+            for entry in res['searchResult3']['song']:
+                found['songs'].append(Song(entry))
         return found
 
 
