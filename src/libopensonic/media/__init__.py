@@ -21,3 +21,4 @@ from .artist import Artist, ArtistInfo
 from .index import Index
 from .podcast_channel import PodcastChannel
 from .podcast_episode import PodcastEpisode
+from .playlist import Playlist

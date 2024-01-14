@@ -25,7 +25,7 @@ class PodcastEpisode(MediaBase):
         self._description = get_key(info, 'description')
         self._publish_date = get_key(info, 'publishDate')
         self._status = get_key(info, 'status')
-        self.parent = get_key(info, 'parent')
+        self._parent = get_key(info, 'parent')
         self._is_dir = get_key(info, 'isDir')
         self._year = get_key(info, 'year')
         self._genre = get_key(info, 'genre')

@@ -28,12 +28,17 @@ class ArtistInfo:
         self._small_url = get_key(info, 'smallImageUrl')
         self._med_url = get_key(info, 'mediumImageUrl')
         self._large_url = get_key(info, 'largeImageUrl')
+        self._similar_artists = []
+        if 'similarArtists' in info:
+            for entry in info['similarArtists']:
+                self._similar_artists.append(Artist(entry))
     
     biography = property(lambda s: s._biography)
     mb_id = property(lambda s: s._mb_id)
     small_url = property(lambda s: s._small_url)
     med_url = property(lambda s: s._med_url)
     large_url = property(lambda s:s._large_url)
+    similar_artists = property(lambda s:s._similar_artists)
 
 
 class Artist(MediaBase):
@@ -45,7 +50,7 @@ class Artist(MediaBase):
         Builds an Artist object
 
         info:dict                   A dict from the JSON response to getArtist
-                                    Must contain fields for MedaiBase and 'name',
+                                    Must contain fields for MediaBase and 'name',
                                     'starred, 'albumCount', and 'album' though 'album'
                                     is a list and can be an empty one
         """
@@ -53,6 +58,8 @@ class Artist(MediaBase):
         self._starred = get_key(info, 'starred')
         self._name = info['name']
         self._info = None
+        self._sort_name = get_key(info, 'sortName')
+        self._roles = get_key(info, 'roles')
         self._albums = []
         if 'album' in info:
             for entry in info['album']:
@@ -63,4 +70,9 @@ class Artist(MediaBase):
     starred = property(lambda s: s._starred)
     name = property(lambda s: s._name)
     albums = property(lambda s: s._albums)
-    info = property(lambda s: s._info)
+    def set_info(self, info: ArtistInfo):
+        self._info = info
+    info = property(lambda s: s._info, set_info)
+    sort_name = property(lambda s: s._sort_name)
+    roles = property(lambda s: s._roles)
+    mb_id = property(lambda s: s._info.mb_id if s._info is not None else '')
