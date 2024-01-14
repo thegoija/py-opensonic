@@ -1,3 +1,7 @@
+##3.0.0
+
+Use new media.Playlist object for interacting with playlists. All status only returns now return True on success.
+
 ##2.0.1
 
 Fix result parsing in search3, allow for empty artist, album, or song field.
