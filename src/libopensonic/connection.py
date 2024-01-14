@@ -32,6 +32,7 @@ from .media.artist import (Artist, ArtistInfo)
 from .media.song import (Song)
 from .media.album import (Album, AlbumInfo)
 from .media.index import Index
+from .media.playlist import Playlist
 
 API_VERSION = '1.16.1'
 
@@ -569,15 +570,11 @@ class Connection:
                             authenticated user must have admin role
                             if this parameter is used
 
-        Returns a dict like the following:
+        Returns a list of media.Playlist
 
-        {u'playlists': {u'playlist': [{u'id': u'62656174732e6d3375',
-                               u'name': u'beats'},
-                              {u'id': u'766172696574792e6d3375',
-                               u'name': u'variety'}]},
-         u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        note:       The Playlist objects returned are not the full playlist
+                    (with tracks) but meant to give the basic details of what
+                    playlists are available. For the full object see getPlaylist()
         """
         methodName = 'getPlaylists'
 
@@ -586,7 +583,10 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        playlists = []
+        for entry in res['playlists']['playlist']:
+            playlists.append(Playlist(entry))
+        return playlists
 
 
     def getPlaylist(self, pid):
@@ -597,36 +597,15 @@ class Connection:
 
         id:str      The ID of the playlist as returned in getPlaylists()
 
-        Returns a dict like the following:
+        Returns a media.Playlist complete with all tracks
 
-        {u'playlist': {u'entry': {u'album': u'The Essential Bob Dylan',
-                          u'artist': u'Bob Dylan',
-                          u'bitRate': 32,
-                          u'contentType': u'audio/mpeg',
-                          u'coverArt': u'2983478293',
-                          u'duration': 984,
-                          u'genre': u'Classic Rock',
-                          u'id': u'982739428',
-                          u'isDir': False,
-                          u'isVideo': False,
-                          u'parent': u'98327428974',
-                          u'path': u"Bob Dylan/Essential Bob Dylan Disc 1/Bob Dylan - The Essential Bob Dylan - 03 - The Times They Are A-Changin'.mp3",
-                          u'size': 3921899,
-                          u'suffix': u'mp3',
-                          u'title': u"The Times They Are A-Changin'",
-                          u'track': 3},
-               u'id': u'44796c616e2e6d3375',
-               u'name': u'Dylan'},
-         u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
         """
         methodName = 'getPlaylist'
 
         req = self._getRequest(methodName, {'id': pid})
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return Playlist(res['playlist'])
 
 
     def createPlaylist(self, playlistId=None, name=None, songIds=None):
@@ -642,11 +621,8 @@ class Connection:
                             either create or update mode.  Note that this
                             list will replace the existing list if updating
 
-        Returns a dict like the following:
-
-        {u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'createPlaylist'
 
@@ -664,7 +640,7 @@ class Connection:
         req = self._getRequestWithList(methodName, 'songId', songIds, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def deletePlaylist(self, pid):
@@ -675,15 +651,15 @@ class Connection:
 
         pid:str     ID of the playlist to delete, as obtained by getPlaylists
 
-        Returns a dict like the following:
-
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'deletePlaylist'
 
         req = self._getRequest(methodName, {'id': pid})
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def download(self, sid):
@@ -800,11 +776,8 @@ class Connection:
         listenTime:int      (Since 1.8.0) The time (unix timestamp) at
                             which the song was listened to.
 
-        Returns a dict like the following:
-
-        {u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'scrobble'
 
@@ -814,7 +787,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def changePassword(self, username, password):
@@ -827,11 +800,8 @@ class Connection:
         username:str        The username whose password is being changed
         password:str        The new password of the user
 
-        Returns a dict like the following:
-
-        {u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'changePassword'
 
@@ -844,7 +814,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def getUser(self, username):
@@ -939,11 +909,8 @@ class Connection:
         <For info on the boolean roles, see http://subsonic.org for more info>
         musicFolderId:int   These are the only folders the user has access to
 
-        Returns a dict like the following:
-
-        {u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'createUser'
         hexPass = 'enc:%s' % self._hexEnc(password)
@@ -963,7 +930,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def updateUser(self, username,  password=None, email=None,
@@ -985,11 +952,8 @@ class Connection:
         All other args are the same as create user and you can update
         whatever item you wish to update for the given username.
 
-        Returns a dict like the following:
-
-        {u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'updateUser'
         if password is not None:
@@ -1008,7 +972,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def deleteUser(self, username):
@@ -1020,11 +984,8 @@ class Connection:
 
         username:str        The username of the user to delete
 
-        Returns a dict like the following:
-
-        {u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'deleteUser'
 
@@ -1033,7 +994,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def getChatMessages(self, since=1):
@@ -1073,11 +1034,8 @@ class Connection:
 
         message:str     The message to add
 
-        Returns a dict like the following:
-
-        {u'status': u'ok',
-         u'version': u'1.5.0',
-         u'xmlns': u'http://subsonic.org/restapi'}
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'addChatMessage'
 
@@ -1086,7 +1044,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def getAlbumList(self, ltype, size=10, offset=0, fromYear=None,
@@ -1467,7 +1425,8 @@ class Connection:
 
         shid:str        The id of the share to delete
 
-        Returns a standard response dict
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'deleteShare'
 
@@ -1476,7 +1435,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def setRating(self, item_id, rating):
@@ -1489,7 +1448,8 @@ class Connection:
         rating:int      The rating between 1 and 5 (inclusive), or 0 to remove
                         the rating
 
-        Returns a standard response dict
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'setRating'
 
@@ -1507,7 +1467,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def getArtists(self):
@@ -1633,63 +1593,10 @@ class Connection:
         musicFolderId:int   Only return results from the music folder
                             with the given ID. See getMusicFolders
 
-        Returns starred songs, albums and artists
-
         Returns a dict like the following:
-            {u'starred': {u'album': {u'album': u'Bird-Brains',
-                         u'artist': u'Tune-Yards',
-                         u'coverArt': 105,
-                         u'created': u'2012-01-30T13:16:58',
-                         u'id': 105,
-                         u'isDir': True,
-                         u'parent': 104,
-                         u'starred': u'2012-08-26T13:18:34',
-                         u'title': u'Bird-Brains'},
-              u'song': [{u'album': u'Mezzanine',
-                         u'albumId': 4,
-                         u'artist': u'Massive Attack',
-                         u'artistId': 0,
-                         u'bitRate': 256,
-                         u'contentType': u'audio/mpeg',
-                         u'coverArt': 6,
-                         u'created': u'2009-06-15T07:48:28',
-                         u'duration': 298,
-                         u'genre': u'Dub',
-                         u'id': 72,
-                         u'isDir': False,
-                         u'isVideo': False,
-                         u'parent': 6,
-                         u'path': u'Massive Attack/Mezzanine/Massive Attack_02_mezzanine.mp3',
-                         u'size': 9564160,
-                         u'starred': u'2012-08-26T13:19:26',
-                         u'suffix': u'mp3',
-                         u'title': u'Risingson',
-                         u'track': 2,
-                         u'type': u'music'},
-                        {u'album': u'Mezzanine',
-                         u'albumId': 4,
-                         u'artist': u'Massive Attack',
-                         u'artistId': 0,
-                         u'bitRate': 256,
-                         u'contentType': u'audio/mpeg',
-                         u'coverArt': 6,
-                         u'created': u'2009-06-15T07:48:25',
-                         u'duration': 380,
-                         u'genre': u'Dub',
-                         u'id': 71,
-                         u'isDir': False,
-                         u'isVideo': False,
-                         u'parent': 6,
-                         u'path': u'Massive Attack/Mezzanine/Massive Attack_01_mezzanine.mp3',
-                         u'size': 12179456,
-                         u'starred': u'2012-08-26T13:19:03',
-                         u'suffix': u'mp3',
-                         u'title': u'Angel',
-                         u'track': 1,
-                         u'type': u'music'}]},
-             u'status': u'ok',
-             u'version': u'1.8.0',
-             u'xmlns': u'http://subsonic.org/restapi'}
+            {u'artists': [media.Artist],
+             u'albums': [media.Album],
+             u'songs': [media.Song]}
         """
         methodName = 'getStarred'
 
@@ -1700,7 +1607,18 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        starred = res['starred']
+        ret = {'artists': [], 'albums': [], 'songs': []}
+        if 'artist' in starred:
+            for entry in starred['artist']:
+                ret['artists'].append(Artist(entry))
+        if 'album' in starred:
+            for entry in starred['album']:
+                ret['albums'].append(Album(entry))
+        if 'song' in starred:
+            for entry in starred['song']:
+                ret['songs'].append(Song(entry))
+        return ret
 
 
     def getStarred2(self, musicFolderId=None):
@@ -1714,8 +1632,9 @@ class Connection:
         but this uses ID3 tags for organization
 
         Returns a dict like the following:
-
-            **See the output from getStarred()**
+            {u'artists': [media.Artist],
+             u'albums': [media.Album],
+             u'songs': [media.Song]}
         """
         methodName = 'getStarred2'
 
@@ -1726,7 +1645,18 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        starred = res['starred2']
+        ret = {'artists': [], 'albums': [], 'songs': []}
+        if 'artist' in starred:
+            for entry in starred['artist']:
+                ret['artists'].append(Artist(entry))
+        if 'album' in starred:
+            for entry in starred['album']:
+                ret['albums'].append(Album(entry))
+        if 'song' in starred:
+            for entry in starred['song']:
+                ret['songs'].append(Song(entry))
+        return ret
 
 
     def updatePlaylist(self, lid, name=None, comment=None, songIdsToAdd=None,
@@ -1746,7 +1676,8 @@ class Connection:
                                     playlist, NOT the song ids.  Note that
                                     this is always a list.
 
-        Returns a normal status response dict
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'updatePlaylist'
 
@@ -1769,7 +1700,7 @@ class Connection:
         req = self._getRequestWithLists(methodName, listMap, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def getAvatar(self, username):
@@ -1814,7 +1745,8 @@ class Connection:
                         collection according to ID3 tags rather
                         than file structure
 
-        Returns a normal status response dict
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'star'
 
@@ -1837,7 +1769,7 @@ class Connection:
         req = self._getRequestWithLists(methodName, listMap)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def unstar(self, sids=None, albumIds=None, artistIds=None):
@@ -1857,7 +1789,8 @@ class Connection:
                         collection according to ID3 tags rather
                         than file structure
 
-        Returns a normal status response dict
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'unstar'
 
@@ -1880,7 +1813,7 @@ class Connection:
         req = self._getRequestWithLists(methodName, listMap)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def getGenres(self):
@@ -1970,13 +1903,16 @@ class Connection:
 
         Tells the server to check for new Podcast episodes. Note: The user
         must be authorized for Podcast administration
+
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'refreshPodcasts'
 
         req = self._getRequest(methodName)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def createPodcastChannel(self, url):
@@ -1987,6 +1923,9 @@ class Connection:
         for Podcast administration
 
         url:str     The URL of the Podcast to add
+
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'createPodcastChannel'
 
@@ -1995,7 +1934,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def deletePodcastChannel(self, pid):
@@ -2006,6 +1945,9 @@ class Connection:
         for Podcast administration
 
         pid:str         The ID of the Podcast channel to delete
+
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'deletePodcastChannel'
 
@@ -2014,7 +1956,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def deletePodcastEpisode(self, pid):
@@ -2025,6 +1967,9 @@ class Connection:
         for Podcast administration
 
         pid:str         The ID of the Podcast episode to delete
+
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'deletePodcastEpisode'
 
@@ -2033,7 +1978,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def downloadPodcastEpisode(self, pid):
@@ -2044,6 +1989,9 @@ class Connection:
         Note: The user must be authorized for Podcast administration
 
         pid:str         The ID of the Podcast episode to download
+
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'downloadPodcastEpisode'
 
@@ -2052,7 +2000,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def getInternetRadioStations(self):
@@ -2159,6 +2107,9 @@ class Connection:
                         already exists for this file, it will be overwritten
         position:int    The position (in milliseconds) within the media file
         comment:str     A user-defined comment
+
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'createBookmark'
 
@@ -2168,7 +2119,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def deleteBookmark(self, mid):
@@ -2179,6 +2130,9 @@ class Connection:
 
         mid:str     The ID of the media file to delete the bookmark from.
                     Other users' bookmarks are not affected
+
+        Returns True on success, raises a errors.SonicError or subclass on
+        failure.
         """
         methodName = 'deleteBookmark'
 
@@ -2187,7 +2141,7 @@ class Connection:
         req = self._getRequest(methodName, q)
         res = self._doInfoReq(req)
         self._checkStatus(res)
-        return res
+        return True
 
 
     def getArtistInfo(self, aid, count=20, includeNotPresent=False):
@@ -2385,6 +2339,8 @@ class Connection:
         Returns the album notes, image URLs, etc., using data from last.fm
 
         aid:int     The album ID
+
+        Returns media.AlbumInfo
         """
         methodName = 'getAlbumInfo'
 
@@ -2402,6 +2358,8 @@ class Connection:
         Same as getAlbumInfo, but uses ID3 tags
 
         aid:int     The album ID
+
+        Returns media.AlbumInfo
         """
         methodName = 'getAlbumInfo2'
 
