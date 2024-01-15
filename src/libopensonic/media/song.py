@@ -38,14 +38,14 @@ class Song(MediaBase):
                 self._album_artists.append(artist.Artist(entry))
         self._is_dir = get_key(info, 'isDir')
         self._created = get_key(info, 'created')
-        self._duration = get_key(info, 'duration')
+        self._duration = int(info['duration']) if 'duration' in info else 0
         self._bit_rate = get_key(info, 'bitRate')
         self._size = get_key(info, 'size')
         self._suffix = get_key(info, 'suffix')
         self._content_type = get_key(info, 'contentType')
         self._is_video = get_key(info, 'isVideo')
         self._path = get_key(info, 'path')
-        self._track = get_key(info, 'track')
+        self._track = int(info['track']) if 'track' in info else 1
         self._type = get_key(info, 'type')
         self._year = get_key(info, 'year')
         super().__init__(info)
