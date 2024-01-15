@@ -1,3 +1,7 @@
+##3.0.1
+
+Remove accidental print statement in search3 return path, fix song parsing
+
 ##3.0.0
 
 Use new media.Playlist object for interacting with playlists. All status only returns now return True on success.
