@@ -1,3 +1,7 @@
+##3.0.2
+
+Acutally bump _version.py
+
 ##3.0.1
 
 Remove accidental print statement in search3 return path, fix song parsing
