@@ -38,11 +38,11 @@ class Album(MediaBase):
         self._parent = get_key(info, 'parent')
         self._album = get_key(info, 'album')
         self._title = get_key(info, 'title')
-        self._name = info['name']
+        self._name = self.get_required_key(info, 'name')
         self._is_dir = get_key(info, 'isDir')
-        self._song_count = info['songCount']
-        self._created = info['created']
-        self._duration = info['duration']
+        self._song_count = self.get_required_key(info, 'songCount')
+        self._created = self.get_required_key(info, 'created')
+        self._duration = self.get_required_key(info, 'duration')
         self._play_count = get_key(info, 'playCount')
         self._artist_id = get_key(info, 'artistId')
         self._artist = get_key(info, 'artist')

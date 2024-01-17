@@ -20,14 +20,14 @@ from .song import Song
 
 class Playlist(MediaBase):
     def __init__(self, info):
-        self._name = info['name']
+        self._name = self.get_required_key(info, 'name')
         self._comment = get_key(info, 'comment')
         self._owner = get_key(info, 'owner')
         self._public = get_key(info, 'public')
-        self._song_count = info['songCount']
-        self._created = info['created']
-        self._changed = info['changed']
-        self._duration = info['duration']
+        self._song_count = self.get_required_key(info, 'songCount')
+        self._created = self.get_required_key(info,'created')
+        self._changed = self.get_required_key(info, 'changed')
+        self._duration = self.get_required_key(info, 'duration')
         self._cover_id = get_key(info, 'coverArt')
         self._songs = []
         if 'entry' in info:
