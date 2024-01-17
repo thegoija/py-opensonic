@@ -1,3 +1,8 @@
+##3.0.6
+
+Objects missing required fields now report a warning using the warnings module instead of raising a
+KeyError.
+
 ##3.0.5
 
 Fat fingered a release...
