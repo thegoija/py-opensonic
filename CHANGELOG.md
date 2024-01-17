@@ -1,3 +1,7 @@
+##4.0.3
+
+More Requests transition bug fixing
+
 ##4.0.2
 
 Set the stream parameter when requesting binary data
