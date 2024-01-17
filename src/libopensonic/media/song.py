@@ -29,11 +29,11 @@ class Song(MediaBase):
         self._display_album_artist = get_key(info, 'displayAlbumArtist')
         self._artist_id = get_key(info, 'artistId')
         self._artists = []
-        if 'artists' in info:
+        if 'artists' in info and info['artists']:
             for entry in info['artists']:
                 self._artists.append(artist.Artist(entry))
         self._album_artists = []
-        if 'albumArtists' in info:
+        if 'albumArtists' in info and info['albumArtists']:
             for entry in info['albumArtists']:
                 self._album_artists.append(artist.Artist(entry))
         self._is_dir = get_key(info, 'isDir')

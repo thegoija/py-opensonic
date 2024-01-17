@@ -53,7 +53,7 @@ class Album(MediaBase):
         self._user_rating = get_key(info, 'userRating')
         self._songs = []
         self._info = None
-        if 'song' in info:
+        if 'song' in info and info['song']:
             for entry in info['song']:
                 self._songs.append(song.Song(entry))
         super().__init__(info)

@@ -26,7 +26,7 @@ class PodcastChannel(MediaBase):
         self._status = get_key(info, 'status')
         self._original_image_url = get_key(info, 'originalImageUrl')
         self._episodes = []
-        if 'episode' in info:
+        if 'episode' in info and info['episode']:
             for entry in info['episode']:
                 self._episodes.append(PodcastEpisode(entry))
         super().__init__(info)

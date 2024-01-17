@@ -30,7 +30,7 @@ class Playlist(MediaBase):
         self._duration = self.get_required_key(info, 'duration')
         self._cover_id = get_key(info, 'coverArt')
         self._songs = []
-        if 'entry' in info:
+        if 'entry' in info and info['entry']:
             for entry in info['entry']:
                 self._songs.append(Song(entry))
         self._allowed_users = get_key(info, 'allowedUser')

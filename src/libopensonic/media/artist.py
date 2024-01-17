@@ -73,7 +73,7 @@ class Artist(MediaBase):
         self._sort_name = get_key(info, 'sortName')
         self._roles = get_key(info, 'roles')
         self._albums = []
-        if 'album' in info:
+        if 'album' in info and info['album']:
             for entry in info['album']:
                 self._albums.append(Album(entry))
         super().__init__(info)
