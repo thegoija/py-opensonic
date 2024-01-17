@@ -17,9 +17,7 @@ along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 
 from netrc import netrc
 from hashlib import md5
-import urllib.request
-import urllib.error
-from urllib.parse import urlencode
+import requests
 from io import StringIO
 
 import json
@@ -125,7 +123,6 @@ class Connection:
         self.setAppName(appName)
         self.setServerPath(serverPath)
         self.setInsecure(insecure)
-        self._opener = self._getOpener()
 
 
     # Properties
@@ -142,14 +139,12 @@ class Connection:
 
     def setUsername(self, username):
         self._username = username
-        self._opener = self._getOpener()
     username = property(lambda s: s._username, setUsername)
 
 
     def setPassword(self, password):
         self._rawPass = password
         # Redo the opener with the new creds
-        self._opener = self._getOpener()
     password = property(lambda s: s._rawPass, setPassword)
 
 
@@ -190,16 +185,13 @@ class Connection:
         """
         methodName = 'ping'
 
-        req = self._getRequest(methodName)
-        try:
-            res = self._doInfoReq(req)
-        except Exception:
-            return False
-        if res['status'] == 'ok':
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        if dres['status'] == 'ok':
             return True
-        elif res['status'] == 'failed':
-            exc = errors.getExcByCode(res['error']['code'])
-            raise exc(res['error']['message'])
+        elif dres['status'] == 'failed':
+            exc = errors.getExcByCode(dres['error']['code'])
+            raise exc(dres['error']['message'])
         return False
 
 
@@ -221,10 +213,10 @@ class Connection:
         """
         methodName = 'getLicense'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
     
 
     def getOpenSubsonicExtensions(self):
@@ -243,10 +235,10 @@ class Connection:
         """
         methodName = 'getOpenSubsonicExtensions'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getScanStatus(self):
@@ -265,10 +257,10 @@ class Connection:
         """
         methodName = 'getScanStatus'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def startScan(self):
@@ -289,10 +281,10 @@ class Connection:
         """
         methodName = 'startScan'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getMusicFolders(self):
@@ -312,10 +304,10 @@ class Connection:
         """
         methodName = 'getMusicFolders'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getNowPlaying(self):
@@ -328,12 +320,12 @@ class Connection:
         """
         methodName = 'getNowPlaying'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         playing = {}
-        for entry in res['nowPlaying']['entry']:
-            playing[entry['username']] = Album(entry)
+        for entry in dres['nowPlaying']['entry']:
+            playing[entry['username']] = Song(entry)
         return playing
 
 
@@ -358,13 +350,10 @@ class Connection:
         q = self._getQueryDict({'musicFolderId': musicFolderId,
             'ifModifiedSince': self._ts2milli(ifModifiedSince)})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        self._fixLastModified(res)
-        indices = []
-        for entry in res['indexes']['index']:
-            indices.append(Index(entry))
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        indices = [Index(entry) for entry in dres['indexes']['index']]
         return indices
 
 
@@ -425,10 +414,10 @@ class Connection:
         """
         methodName = 'getMusicDirectory'
 
-        req = self._getRequest(methodName, {'id': mid})
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, {'id': mid})
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def search(self, artist=None, album=None, title=None, any=None,
@@ -458,10 +447,10 @@ class Connection:
             'title': title, 'any': any, 'count': count, 'offset': offset,
             'newerThan': self._ts2milli(newerThan)})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def search2(self, query, artistCount=20, artistOffset=0, albumCount=20,
@@ -479,7 +468,7 @@ class Connection:
         albumOffset:int     Search offset for albums (for paging) [default: 0]
         songCount:int       Max number of songs to return [default: 20]
         songOffset:int      Search offset for songs (for paging) [default: 0]
-        musicFolderId:int   Only return results from the music folder
+        musicFolderId:int   Only return dresults from the music folder
                             with the given ID. See getMusicFolders
 
         Returns a dict containing 3 keys, 'artists', 'albums', and 'songs' with each
@@ -492,16 +481,22 @@ class Connection:
             'albumOffset': albumOffset, 'songCount': songCount,
             'songOffset': songOffset, 'musicFolderId': musicFolderId})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        found = {'artists': [], 'albums': [], 'songs': []}
-        for entry in res['searchResults3']['artist']:
-            found['artists'].append(Artist(entry))
-        for entry in res['searchResults3']['album']:
-            found['albums'].append(Album(entry))
-        for entry in res['searchResults3']['song']:
-            found['songs'].append(Song(entry))
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        found = {}
+        if 'artist' in dres['searchResult2']:
+            found['artists'] = [Artist(entry) for entry in dres['searchResult2']['artist']]
+        else:
+            found['artists'] = []
+        if 'album' in res['searchResult2']:
+            found['albums'] = [Album(entry) for entry in res['searchResult2']['album']]
+        else:
+            found['albums'] = []
+        if 'song' in res['searchResult2']:
+            found['songs'] = [Song(entry) for entry in res['searchResult2']['song']]
+        else:
+            found['songs'] = []
         return found
 
 
@@ -520,7 +515,7 @@ class Connection:
         albumOffset:int     Search offset for albums (for paging) [default: 0]
         songCount:int       Max number of songs to return [default: 20]
         songOffset:int      Search offset for songs (for paging) [default: 0]
-        musicFolderId:int   Only return results from the music folder
+        musicFolderId:int   Only return dresults from the music folder
                             with the given ID. See getMusicFolders
 
         Returns a dict containing 3 keys, 'artists', 'albums', and 'songs' with each
@@ -533,19 +528,22 @@ class Connection:
             'albumOffset': albumOffset, 'songCount': songCount,
             'songOffset': songOffset, 'musicFolderId': musicFolderId})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        found = {'artists': [], 'albums': [], 'songs': []}
-        if 'artist' in res['searchResult3']:
-            for entry in res['searchResult3']['artist']:
-                found['artists'].append(Artist(entry))
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        found = {}
+        if 'artist' in dres['searchResult3']:
+            found['artists'] = [Artist(entry) for entry in dres['searchResult3']['artist']]
+        else:
+            found['artists'] = []
         if 'album' in res['searchResult3']:
-            for entry in res['searchResult3']['album']:
-                found['albums'].append(Album(entry))
+            found['albums'] = [Album(entry) for entry in res['searchResult3']['album']]
+        else:
+            found['albums'] = []
         if 'song' in res['searchResult3']:
-            for entry in res['searchResult3']['song']:
-                found['songs'].append(Song(entry))
+            found['songs'] = [Song(entry) for entry in res['searchResult3']['song']]
+        else:
+            found['songs'] = []
         return found
 
 
@@ -571,13 +569,10 @@ class Connection:
 
         q = self._getQueryDict({'username': username})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        playlists = []
-        for entry in res['playlists']['playlist']:
-            playlists.append(Playlist(entry))
-        return playlists
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return [Playlist(entry) for entry in dres['playlists']['playlist']]
 
 
     def getPlaylist(self, pid):
@@ -593,10 +588,10 @@ class Connection:
         """
         methodName = 'getPlaylist'
 
-        req = self._getRequest(methodName, {'id': pid})
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return Playlist(res['playlist'])
+        res = self._doRequest(methodName, {'id': pid})
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return Playlist(dres['playlist'])
 
 
     def createPlaylist(self, playlistId=None, name=None, songIds=None):
@@ -628,9 +623,9 @@ class Connection:
 
         q = self._getQueryDict({'playlistId': playlistId, 'name': name})
 
-        req = self._getRequestWithList(methodName, 'songId', songIds, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequestWithList(methodName, 'songId', songIds, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -647,9 +642,9 @@ class Connection:
         """
         methodName = 'deletePlaylist'
 
-        req = self._getRequest(methodName, {'id': pid})
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, {'id': pid})
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -666,11 +661,11 @@ class Connection:
         """
         methodName = 'download'
 
-        req = self._getRequest(methodName, {'id': sid})
-        res = self._doBinReq(req)
-        if isinstance(res, dict):
-            self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, {'id': sid})
+        dres = self._handleBinRes(res)
+        if isinstance(dres, dict):
+            self._checkStatus(dres)
+        return dres
 
 
     def stream(self, sid, maxBitRate=0, tformat=None, timeOffset=None,
@@ -716,11 +711,11 @@ class Connection:
             'estimateContentLength': estimateContentLength,
             'converted': converted})
 
-        req = self._getRequest(methodName, q)
-        res = self._doBinReq(req)
-        if isinstance(res, dict):
-            self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleBinRes(res)
+        if isinstance(dres, dict):
+            self._checkStatus(dres)
+        return dres
 
 
     def getCoverArt(self, aid, size=None):
@@ -739,11 +734,11 @@ class Connection:
 
         q = self._getQueryDict({'id': aid, 'size': size})
 
-        req = self._getRequest(methodName, q)
-        res = self._doBinReq(req)
-        if isinstance(res, dict):
-            self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleBinRes(res)
+        if isinstance(dres, dict):
+            self._checkStatus(dres)
+        return dres
 
 
     def scrobble(self, sid, submission=True, listenTime=None):
@@ -775,9 +770,9 @@ class Connection:
         q = self._getQueryDict({'id': sid, 'submission': submission,
             'time': self._ts2milli(listenTime)})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -802,9 +797,9 @@ class Connection:
         #q = {'username': username, 'password': hexPass.lower()}
         q = {'username': username, 'password': password}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -840,10 +835,10 @@ class Connection:
 
         q = {'username': username}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getUsers(self):
@@ -876,10 +871,10 @@ class Connection:
         """
         methodName = 'getUsers'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def createUser(self, username, password, email,
@@ -918,9 +913,9 @@ class Connection:
             'musicFolderId': musicFolderId
         })
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -936,7 +931,7 @@ class Connection:
         Modifies an existing Subsonic user.
 
         username:str        The username of the user to update.
-        musicFolderId:int   Only return results from the music folder
+        musicFolderId:int   Only return dresults from the music folder
                             with the given ID. See getMusicFolders
         maxBitRate:int      The max bitrate for the user.  0 is unlimited
 
@@ -960,9 +955,9 @@ class Connection:
             'videoConversionRole': videoConversionRole,
             'musicFolderId': musicFolderId, 'maxBitRate': maxBitRate
         })
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -982,9 +977,9 @@ class Connection:
 
         q = {'username': username}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1011,10 +1006,10 @@ class Connection:
 
         q = {'since': self._ts2milli(since)}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def addChatMessage(self, message):
@@ -1032,9 +1027,9 @@ class Connection:
 
         q = {'message': message}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1072,13 +1067,10 @@ class Connection:
             'offset': offset, 'fromYear': fromYear, 'toYear': toYear,
             'genre': genre, 'musicFolderId': musicFolderId})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        albums = []
-        for entry in res['albumList']['album']:
-            albums.append(Album(entry))
-        return albums
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return [Album(entry) for entry in dres['albumList']['album']]
 
 
     def getAlbumList2(self, ltype, size=10, offset=0, fromYear=None,
@@ -1113,13 +1105,10 @@ class Connection:
             'offset': offset, 'fromYear': fromYear, 'toYear': toYear,
             'genre': genre})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        albums = []
-        for entry in res['albumList2']['album']:
-            albums.append(Album(entry))
-        return albums
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return [Album(entry) for entry in dres['albumList2']['album']]
 
 
     def getRandomSongs(self, size=10, genre=None, fromYear=None,
@@ -1144,13 +1133,10 @@ class Connection:
             'fromYear': fromYear, 'toYear': toYear,
             'musicFolderId': musicFolderId})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        songs = []
-        for entry in res['randomSongs']['song']:
-            songs.append(Song(entry))
-        return songs
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return [Song(entry) for entry in dres['randomSongs']['song']]
 
 
     def getLyrics(self, artist=None, title=None):
@@ -1176,10 +1162,10 @@ class Connection:
 
         q = self._getQueryDict({'artist': artist, 'title': title})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
     
 
     def getLyricsBySongId(self, song_id):
@@ -1232,10 +1218,10 @@ class Connection:
 
         q = self._getQueryDict({'id': song_id})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def jukeboxControl(self, action, index=None, sids=None, gain=None,
@@ -1273,18 +1259,18 @@ class Connection:
         q = self._getQueryDict({'action': action, 'index': index,
             'gain': gain, 'offset': offset})
 
-        req = None
+        res = None
         if action == 'add':
             # We have to deal with the sids
             if not (isinstance(sids, list) or isinstance(sids, tuple)):
                 raise errors.ArgumentError('If you are adding songs, "sids" must '
                     'be a list or tuple!')
-            req = self._getRequestWithList(methodName, 'id', sids, q)
+            res = self._doRequestWithList(methodName, 'id', sids, q)
         else:
-            req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+            res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getPodcasts(self, incEpisodes=True, pid=None):
@@ -1305,14 +1291,10 @@ class Connection:
 
         q = self._getQueryDict({'includeEpisodes': incEpisodes,
             'id': pid})
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        channels = []
-        for entry in res['podcasts']['channel']:
-            channels.append(PodcastChannel(entry))
-
-        return channels
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return [PodcastChannel(entry) for entry in dres['podcasts']['channel']]
 
 
     def getShares(self):
@@ -1346,10 +1328,10 @@ class Connection:
         """
         methodName = 'getShares'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def createShare(self, shids=None, description=None, expires=None):
@@ -1380,10 +1362,10 @@ class Connection:
 
         q = self._getQueryDict({'description': description,
             'expires': self._ts2milli(expires)})
-        req = self._getRequestWithList(methodName, 'id', shids, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequestWithList(methodName, 'id', shids, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def updateShare(self, shid, description=None, expires=None):
@@ -1402,10 +1384,10 @@ class Connection:
         q = self._getQueryDict({'id': shid, 'description': description,
             expires: self._ts2milli(expires)})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def deleteShare(self, shid):
@@ -1423,9 +1405,9 @@ class Connection:
 
         q = self._getQueryDict({'id': shid})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1455,9 +1437,9 @@ class Connection:
 
         q = self._getQueryDict({'id': item_id, 'rating': rating})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1472,14 +1454,11 @@ class Connection:
         """
         methodName = 'getArtists'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
 
-        indices = []
-        for entry in res['artists']['index']:
-            indices.append(Index(entry))
-        return indices
+        return [Index(entry) for entry in dres['artists']['index']]
 
 
     def getArtist(self, artist_id):
@@ -1497,10 +1476,10 @@ class Connection:
 
         q = self._getQueryDict({'id': artist_id})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return Artist(res['artist'])
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return Artist(dres['artist'])
 
 
     def getAlbum(self, album_id):
@@ -1518,10 +1497,10 @@ class Connection:
 
         q = self._getQueryDict({'id': album_id})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return Album(res['album'])
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return Album(dres['album'])
 
 
     def getSong(self, sid):
@@ -1539,10 +1518,10 @@ class Connection:
 
         q = self._getQueryDict({'id': sid})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return Song(res['song'])
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return Song(dres['song'])
 
 
     def getVideos(self):
@@ -1571,17 +1550,17 @@ class Connection:
         """
         methodName = 'getVideos'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getStarred(self, musicFolderId=None):
         """
         since 1.8.0
 
-        musicFolderId:int   Only return results from the music folder
+        musicFolderId:int   Only return dresults from the music folder
                             with the given ID. See getMusicFolders
 
         Returns a dict like the following:
@@ -1595,20 +1574,23 @@ class Connection:
         if musicFolderId:
             q['musicFolderId'] = musicFolderId
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        starred = res['starred']
-        ret = {'artists': [], 'albums': [], 'songs': []}
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        starred = dres['starred']
+        ret = {}
         if 'artist' in starred:
-            for entry in starred['artist']:
-                ret['artists'].append(Artist(entry))
+            ret['artists'] = [Artist(entry) for entry in starred['artist']]
+        else:
+            ret['artists'] = []
         if 'album' in starred:
-            for entry in starred['album']:
-                ret['albums'].append(Album(entry))
+            ret['albums'] = [Album(entry) for entry in starred['album']]
+        else:
+            ret['albums'] = []
         if 'song' in starred:
-            for entry in starred['song']:
-                ret['songs'].append(Song(entry))
+            ret['songs'] = [Song(entry) for entry in starred['song']]
+        else:
+            ret['songs'] = []
         return ret
 
 
@@ -1616,7 +1598,7 @@ class Connection:
         """
         since 1.8.0
 
-        musicFolderId:int   Only return results from the music folder
+        musicFolderId:int   Only return dresults from the music folder
                             with the given ID. See getMusicFolders
 
         Returns starred songs, albums and artists like getStarred(),
@@ -1633,20 +1615,23 @@ class Connection:
         if musicFolderId:
             q['musicFolderId'] = musicFolderId
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        starred = res['starred2']
-        ret = {'artists': [], 'albums': [], 'songs': []}
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        starred = dres['starred2']
+        ret = {}
         if 'artist' in starred:
-            for entry in starred['artist']:
-                ret['artists'].append(Artist(entry))
+            ret['artists'] = [Artist(entry) for entry in starred['artist']]
+        else:
+            ret['artists'] = []
         if 'album' in starred:
-            for entry in starred['album']:
-                ret['albums'].append(Album(entry))
+            ret['albums'] = [Album(entry) for entry in starred['album']]
+        else:
+            ret['albums'] = []
         if 'song' in starred:
-            for entry in starred['song']:
-                ret['songs'].append(Song(entry))
+            ret['songs'] = [Song(entry) for entry in starred['song']]
+        else:
+            ret['songs'] = []
         return ret
 
 
@@ -1688,9 +1673,9 @@ class Connection:
             songIndexesToRemove = [songIndexesToRemove]
         listMap = {'songIdToAdd': songIdsToAdd,
             'songIndexToRemove': songIndexesToRemove}
-        req = self._getRequestWithLists(methodName, listMap, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequestWithLists(methodName, listMap, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1702,22 +1687,18 @@ class Connection:
 
         username:str    The user to retrieve the avatar for
 
-        Returns the file-like object for reading or raises an exception
-        on error
+        Returns the requests.Response object for reading on success or raises
+        and exception
         """
         methodName = 'getAvatar'
 
         q = {'username': username}
 
-        req = self._getRequest(methodName, q)
-        try:
-            res = self._doBinReq(req)
-        except urllib.error.HTTPError:
-            # Avatar is not set/does not exist, return None
-            return None
-        if isinstance(res, dict):
-            self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleBinRes(res)
+        if isinstance(dres, dict):
+            self._checkStatus(dres)
+        return dres
 
 
     def star(self, sids=None, albumIds=None, artistIds=None):
@@ -1757,9 +1738,9 @@ class Connection:
         listMap = {'id': sids,
             'albumId': albumIds,
             'artistId': artistIds}
-        req = self._getRequestWithLists(methodName, listMap)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequestWithLists(methodName, listMap)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1801,9 +1782,9 @@ class Connection:
         listMap = {'id': sids,
             'albumId': albumIds,
             'artistId': artistIds}
-        req = self._getRequestWithLists(methodName, listMap)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequestWithLists(methodName, listMap)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1815,23 +1796,23 @@ class Connection:
         """
         methodName = 'getGenres'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getSongsByGenre(self, genre, count=10, offset=0, musicFolderId=None):
         """
         since 1.9.0
 
-        Returns songs in a given genre
+        Returns list of media.Songs in a given genre
 
         genre:str       The genre, as returned by getGenres()
         count:int       The maximum number of songs to return.  Max is 500
                         default: 10
         offset:int      The offset if you are paging.  default: 0
-        musicFolderId:int   Only return results from the music folder
+        musicFolderId:int   Only return dresults from the music folder
                             with the given ID. See getMusicFolders
         """
         methodName = 'getSongsByGenre'
@@ -1842,10 +1823,10 @@ class Connection:
             'musicFolderId': musicFolderId,
         })
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return [Song(entry) for entry in dres['songsByGenre']['song']]
 
 
     def hls (self, mid, bitrate=None):
@@ -1877,15 +1858,11 @@ class Connection:
         methodName = 'hls'
 
         q = self._getQueryDict({'id': mid, 'bitrate': bitrate})
-        req = self._getRequest(methodName, q)
-        try:
-            res = self._doBinReq(req)
-        except urllib.error.HTTPError:
-            # Avatar is not set/does not exist, return None
-            return None
-        if isinstance(res, dict):
-            self._checkStatus(res)
-        return res.read()
+        res = self._doRequest(methodName, q)
+        dres = self._handleBinRes(res)
+        if isinstance(dres, dict):
+            self._checkStatus(dres)
+        return dres.read()
 
 
     def refreshPodcasts(self):
@@ -1900,9 +1877,9 @@ class Connection:
         """
         methodName = 'refreshPodcasts'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1922,9 +1899,9 @@ class Connection:
 
         q = {'url': url}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1944,9 +1921,9 @@ class Connection:
 
         q = {'id': pid}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1966,9 +1943,9 @@ class Connection:
 
         q = {'id': pid}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -1988,9 +1965,9 @@ class Connection:
 
         q = {'id': pid}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -2002,10 +1979,10 @@ class Connection:
         """
         methodName = 'getInternetRadioStations'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def createInternetRadioStation(self, streamUrl, name, homepageUrl=None):
@@ -2023,10 +2000,10 @@ class Connection:
         q = self._getQueryDict({
             'streamUrl': streamUrl, 'name': name, 'homepageUrl': homepageUrl})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def updateInternetRadioStation(self, iid, streamUrl, name,
@@ -2048,10 +2025,10 @@ class Connection:
             'homepageUrl': homepageUrl,
         })
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def deleteInternetRadioStation(self, iid):
@@ -2066,10 +2043,10 @@ class Connection:
 
         q = {'id': iid}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getBookmarks(self):
@@ -2081,10 +2058,10 @@ class Connection:
         """
         methodName = 'getBookmarks'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def createBookmark(self, mid, position, comment=None):
@@ -2107,9 +2084,9 @@ class Connection:
         q = self._getQueryDict({'id': mid, 'position': position,
             'comment': comment})
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -2129,9 +2106,9 @@ class Connection:
 
         q = {'id': mid}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
         return True
 
 
@@ -2152,10 +2129,10 @@ class Connection:
         q = {'id': aid, 'count': count,
             'includeNotPresent': includeNotPresent}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return ArtistInfo(res['artistInfo'])
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return ArtistInfo(dres['artistInfo'])
 
 
     def getArtistInfo2(self, aid, count=20, includeNotPresent=False):
@@ -2174,10 +2151,10 @@ class Connection:
         q = {'id': aid, 'count': count,
             'includeNotPresent': includeNotPresent}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return ArtistInfo(res['artistInfo2'])
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return ArtistInfo(dres['artistInfo2'])
 
 
     def getSimilarSongs(self, iid, count=50):
@@ -2186,7 +2163,7 @@ class Connection:
 
         Returns a random collection of songs from the given artist and
         similar artists, using data from last.fm. Typically used for
-        artist radio features.
+        artist radio features. As a list of media.Song
 
         iid:str     The artist, album, or song ID
         count:int   Max number of songs to return
@@ -2195,10 +2172,10 @@ class Connection:
 
         q = {'id': iid, 'count': count}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return [Song(entry) for entry in dres['similarSongs']['song']]
 
 
     def getSimilarSongs2(self, iid, count=50):
@@ -2215,10 +2192,10 @@ class Connection:
 
         q = {'id': iid, 'count': count}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return [Song(entry) for entry in dres['similarSongs2']['song']]
 
 
     def savePlayQueue(self, qids, current=None, position=None):
@@ -2243,10 +2220,10 @@ class Connection:
 
         q = self._getQueryDict({'current': current, 'position': position})
 
-        req = self._getRequestWithLists(methodName, {'id': qids}, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequestWithLists(methodName, {'id': qids}, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getPlayQueue(self):
@@ -2262,10 +2239,10 @@ class Connection:
         """
         methodName = 'getPlayQueue'
 
-        req = self._getRequest(methodName)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getTopSongs(self, artist, count=50):
@@ -2281,10 +2258,10 @@ class Connection:
 
         q = {'artist': artist, 'count': count}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getNewestPodcasts(self, count=20):
@@ -2299,10 +2276,10 @@ class Connection:
 
         q = {'count': count}
 
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getVideoInfo(self, vid):
@@ -2317,10 +2294,10 @@ class Connection:
         methodName = 'getVideoInfo'
 
         q = {'id': int(vid)}
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     def getAlbumInfo(self, aid):
@@ -2336,10 +2313,10 @@ class Connection:
         methodName = 'getAlbumInfo'
 
         q = {'id': aid}
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return AlbumInfo(res['albumInfo'])
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return AlbumInfo(dres['albumInfo'])
 
 
     def getAlbumInfo2(self, aid):
@@ -2355,10 +2332,10 @@ class Connection:
         methodName = 'getAlbumInfo2'
 
         q = {'id': aid}
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return AlbumInfo(res['albumInfo'])
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return AlbumInfo(dres['albumInfo'])
 
 
     def getCaptions(self, vid, fmt=None):
@@ -2374,19 +2351,15 @@ class Connection:
         methodName = 'getCaptions'
 
         q = self._getQueryDict({'id': int(vid), 'format': fmt})
-        req = self._getRequest(methodName, q)
-        res = self._doInfoReq(req)
-        self._checkStatus(res)
-        return res
+        res = self._doRequest(methodName, q)
+        dres = self._handleInfoRes(res)
+        self._checkStatus(dres)
+        return dres
 
 
     #
     # Private internal methods
     #
-    def _getOpener(self):
-        return urllib.request.build_opener()
-
-
     def _getQueryDict(self, d):
         """
         Given a dictionary, it cleans out all the values set to None
@@ -2418,55 +2391,46 @@ class Connection:
         return qdict
 
 
-    def _getRequest(self, methodName, query=None):
-        if query is None:
-            query = {}
-
+    def _doRequest(self, methodName, query=None):
         qdict = self._getBaseQdict()
-        qdict.update(query)
+        if query is not None:
+            qdict.update(query)
+
         if self._useViews:
             methodName += '.view'
-        url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath, methodName)
+        url = f"{self._baseUrl}:{self._port}/{self._serverPath}/{methodName}"
 
-        if not self._useGET:
-            req = urllib.request.Request(url, urlencode(qdict).encode('utf-8'))
+        if self._useGET:
+            res = requests.get(url, params=qdict)
         else:
-            url += '?%s' % urlencode(qdict)
-            req = urllib.request.Request(url)
+            res = requests.post(url, data=qdict)
 
-        return req
+        return res
 
 
-    def _getRequestWithList(self, methodName, listName, alist, query=None):
+    def _doRequestWithList(self, methodName, listName, alist, query=None):
         """
         Like _getRequest, but allows appending a number of items with the
         same key (listName).  This bypasses the limitation of urlencode()
         """
-        if query is None:
-            query = {}
-
         qdict = self._getBaseQdict()
-        qdict.update(query)
+        if query is not None:
+            qdict.update(query)
+        qdict[listName] = alist
+
         if self._useViews:
             methodName += '.view'
-        url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
-            methodName)
-        data = StringIO()
-        data.write(urlencode(qdict))
+        url = f"{self._baseUrl}:{self._port}/{self._serverPath}/{methodName}"
 
-        for i in alist:
-            data.write('&%s' % urlencode({listName: i}))
-
-        if not self._useGET:
-            req = urllib.request.Request(url, data.getvalue().encode('utf-8'))
+        if self._useGET:
+            res = requests.get(url, params=qdict)
         else:
-            url += '?%s' % data.getvalue()
-            req = urllib.request.Request(url)
+            res = requests.post(url, data=qdict)
 
-        return req
+        return res
 
 
-    def _getRequestWithLists(self, methodName, listMap, query=None):
+    def _doRequestWithLists(self, methodName, listMap, query=None):
         """
         Like _getRequestWithList(), but you must pass a dictionary
         that maps the listName to the list.  This allows for multiple
@@ -2476,50 +2440,37 @@ class Connection:
         listMap:dict        A mapping of listName to a list of entries
         query:dict          The normal query dict
         """
-        if query is None:
-            query = {}
-
         qdict = self._getBaseQdict()
-        qdict.update(query)
+        if query is not None:
+            qdict.update(query)
+        qdict.update(listMap)
+
         if self._useViews:
             methodName += '.view'
-        url = '%s:%d/%s/%s' % (self._baseUrl, self._port, self._serverPath,
-            methodName)
-        data = StringIO()
-        data.write(urlencode(qdict))
 
-        for k, l in listMap.items():
-            for i in l:
-                data.write('&%s' % urlencode({k: i}))
+        url = f"{self._baseUrl}:{self._port}/{self._serverPath}/{methodName}"
 
-        if not self._useGET:
-            req = urllib.request.Request(url, data.getvalue().encode('utf-8'))
+        if self._useGET:
+            res = requests.get(url, params=qdict)
         else:
-            url += '?%s' % data.getvalue()
-            req = urllib.request.Request(url)
+            res = requests.post(url, data=qdict)
 
-        return req
+        return res
 
 
-    def _doInfoReq(self, req):
+    def _handleInfoRes(self, res):
         # Returns a parsed dictionary version of the result
-        res = self._opener.open(req)
-        dres = json.loads(res.read().decode('utf-8'))
+        dres = res.json()
         return dres['subsonic-response']
 
 
-    def _doBinReq(self, req):
-        res = self._opener.open(req)
-        info = res.info()
-        if hasattr(info, 'getheader'):
-            contType = info.getheader('Content-Type')
-        else:
-            contType = info.get('Content-Type')
+    def _handleBinRes(self, res):
+        contType = res.headers['Content-Type']
 
         if contType:
             if contType.startswith('text/html') or \
                     contType.startswith('application/json'):
-                dres = json.loads(res.read())
+                dres = res.json()
                 return dres['subsonic-response']
         return res
 
@@ -2553,13 +2504,6 @@ class Connection:
         if ts is None:
             return None
         return int(ts * 1000)
-
-
-    def _separateServerPath(self):
-        """
-        separate REST portion of URL from base server path.
-        """
-        return urllib.parse.splithost(self._serverPath)[1].split('/')[0]
 
 
     def _fixLastModified(self, data):
