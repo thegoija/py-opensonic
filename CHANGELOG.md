@@ -1,3 +1,7 @@
+##4.0.2
+
+Set the stream parameter when requesting binary data
+
 ##4.0.1
 
 Fix search[3|2] output generation

@@ -718,7 +718,7 @@ class Connection:
             'estimateContentLength': estimateContentLength,
             'converted': converted})
 
-        res = self._doRequest(methodName, q)
+        res = self._doRequest(methodName, q, is_stream=True)
         dres = self._handleBinRes(res)
         if isinstance(dres, dict):
             self._checkStatus(dres)
@@ -741,7 +741,7 @@ class Connection:
 
         q = self._getQueryDict({'id': aid, 'size': size})
 
-        res = self._doRequest(methodName, q)
+        res = self._doRequest(methodName, q, is_stream=True)
         dres = self._handleBinRes(res)
         if isinstance(dres, dict):
             self._checkStatus(dres)
@@ -2402,7 +2402,7 @@ class Connection:
         return qdict
 
 
-    def _doRequest(self, methodName, query=None):
+    def _doRequest(self, methodName, query=None, is_stream=False):
         qdict = self._getBaseQdict()
         if query is not None:
             qdict.update(query)
@@ -2412,9 +2412,9 @@ class Connection:
         url = f"{self._baseUrl}:{self._port}/{self._serverPath}/{methodName}"
 
         if self._useGET:
-            res = requests.get(url, params=qdict)
+            res = requests.get(url, params=qdict, stream=is_stream)
         else:
-            res = requests.post(url, data=qdict)
+            res = requests.post(url, data=qdict, stream=is_stream)
 
         return res
 
