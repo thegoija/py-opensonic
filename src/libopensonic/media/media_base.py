@@ -48,7 +48,6 @@ class MediaBase:
         """
         self._id = self.get_required_key(info, 'id') 
         self._cover_id = get_key(info, 'coverArt')
-        self._cover = None
 
     def to_dict(self):
         return {'id': self._id, 'coverId': self.cover_id}
@@ -59,15 +58,6 @@ class MediaBase:
     
     id = property(lambda s: s._id)
     cover_id = property(lambda s: s._cover_id)
-
-    def unpack_cover(self, res):
-        """
-        Cache the actual cover for this media
-
-        res: HttpResponse object            The response object we got back from getCoverArt
-        """
-        self._cover = Cover(res.info().getheader('Content-Type'), bytearray(res.read()))
-    cover = property(lambda s: s._cover, unpack_cover)
 
     def get_required_key(self, store, key):
         if key in store:

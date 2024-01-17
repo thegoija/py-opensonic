@@ -2476,7 +2476,7 @@ class Connection:
 
 
     def _handleBinRes(self, res):
-        contType = res.headers['Content-Type']
+        contType = res.headers['Content-Type'] if 'Content-Type' in res.headers else None
 
         if contType:
             if contType.startswith('text/html') or \
