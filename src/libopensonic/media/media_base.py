@@ -18,12 +18,12 @@ along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 from warnings import warn
 
 
-def get_key(store, key):
+def get_key(store, key, default=None):
     """
     Quality of life helper function to give the keyed value if it exists,
-    None otherwise.
+    the default specified (None if not specified) otherwise.
     """
-    return store[key] if key in store else None
+    return store[key] if key in store else default
 
 
 class Cover:

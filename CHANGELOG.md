@@ -1,3 +1,7 @@
+##4.0.0
+
+Switch to the requests library instead of urllib for interaction. Some quality of life improvements on parsing returned objects.
+
 ##3.0.7
 
 Objects that contain lists now protect against those lists actually being None in constructors

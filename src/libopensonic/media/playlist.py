@@ -23,7 +23,7 @@ class Playlist(MediaBase):
         self._name = self.get_required_key(info, 'name')
         self._comment = get_key(info, 'comment')
         self._owner = get_key(info, 'owner')
-        self._public = get_key(info, 'public')
+        self._public = get_key(info, 'public', False)
         self._song_count = self.get_required_key(info, 'songCount')
         self._created = self.get_required_key(info,'created')
         self._changed = self.get_required_key(info, 'changed')
