@@ -1,3 +1,7 @@
+##4.0.4
+
+Protect against missing headers in response
+
 ##4.0.3
 
 More Requests transition bug fixing
