@@ -497,11 +497,11 @@ class Connection:
         else:
             found['artists'] = []
         if 'album' in dres['searchResult2']:
-            found['albums'] = [Album(entry) for entry in res['searchResult2']['album']]
+            found['albums'] = [Album(entry) for entry in dres['searchResult2']['album']]
         else:
             found['albums'] = []
         if 'song' in dres['searchResult2']:
-            found['songs'] = [Song(entry) for entry in res['searchResult2']['song']]
+            found['songs'] = [Song(entry) for entry in dres['searchResult2']['song']]
         else:
             found['songs'] = []
         return found
@@ -544,11 +544,11 @@ class Connection:
         else:
             found['artists'] = []
         if 'album' in dres['searchResult3']:
-            found['albums'] = [Album(entry) for entry in res['searchResult3']['album']]
+            found['albums'] = [Album(entry) for entry in dres['searchResult3']['album']]
         else:
             found['albums'] = []
         if 'song' in dres['searchResult3']:
-            found['songs'] = [Song(entry) for entry in res['searchResult3']['song']]
+            found['songs'] = [Song(entry) for entry in dres['searchResult3']['song']]
         else:
             found['songs'] = []
         return found
