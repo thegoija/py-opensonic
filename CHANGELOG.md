@@ -1,3 +1,7 @@
+##4.0.1
+
+Fix search[3|2] output generation
+
 ##4.0.0
 
 Switch to the requests library instead of urllib for interaction. Some quality of life improvements on parsing returned objects.
