@@ -31,6 +31,17 @@ class PodcastChannel(MediaBase):
                 self._episodes.append(PodcastEpisode(entry))
         super().__init__(info)
 
+    def to_dict(self):
+        ret = super().to_dict()
+        ret['url'] = self._url
+        ret['title'] = self._title
+        ret['description'] = self._description
+        ret['status'] = self._status
+        ret['originalImageUrl'] = self._original_image_url
+        if self._episodes:
+            ret['episode'] = [entry.to_dict() for entry in self._episodes]
+        return ret
+
     url = property(lambda s: s._url)
     title = property(lambda s: s._title)
     description = property(lambda s: s._description)

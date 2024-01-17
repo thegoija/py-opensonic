@@ -50,6 +50,34 @@ class Song(MediaBase):
         self._year = get_key(info, 'year')
         super().__init__(info)
 
+    def to_dict(self):
+        ret = super().to_dict()
+        ret['parent'] = self._parent
+        ret['title'] = self._title
+        ret['album'] = self._album
+        ret['albumId'] = self._album_id
+        ret['artist'] = self._artist
+        ret['displayArtist'] = self._display_artist
+        ret['displayAlbumArtist'] = self._display_album_artist
+        ret['artistId'] = self._artist_id
+        ret['isDir'] = self._is_dir
+        ret['created'] = self._created
+        ret['duration'] = self._duration
+        ret['bitRate'] = self._bit_rate
+        ret['size'] = self._size
+        ret['suffix'] = self._suffix
+        ret['contentType'] = self._content_type
+        ret['isVideo'] = self._is_video
+        ret['path'] = self._path
+        ret['track'] = self._track
+        ret['type'] = self._type
+        ret['year'] = self._year
+        if self._artists:
+            ret['artists'] = [entry.to_dict() for entry in self.artists]
+        if self._album_artists:
+            ret['albumArtists'] = [entry.to_dict() for entry in self._album_artists]
+        return ret
+
     parent = property(lambda s: s._parent)
     title = property(lambda s: s._title)
     album = property(lambda s: s._album)
