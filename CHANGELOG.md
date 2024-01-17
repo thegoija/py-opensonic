@@ -1,3 +1,7 @@
+##3.0.7
+
+Objects that contain lists now protect against those lists actually being None in constructors
+
 ##3.0.6
 
 Objects missing required fields now report a warning using the warnings module instead of raising a
