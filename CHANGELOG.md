@@ -1,3 +1,7 @@
+##4.0.5
+
+Fiddly bits of packaging...
+
 ##4.0.4
 
 Protect against missing headers in response

@@ -35,7 +35,6 @@ and then get a couple of random songs.
 ```python
 #!/usr/bin/env python
 
-from pprint import pprint
 import libopensonic
 
 # We pass in the base url, the username, password, and port number
@@ -45,7 +44,7 @@ conn = libopensonic.Connection('https://music.example.com' , 'myuser' ,
 # Let's get 2 completely random songs
 songs = conn.getRandomSongs(size=2)
 # We'll just pretty print the results we got to the terminal
-pprint(songs)
+print(songs[0].to_dict())
 ```
 
 As you can see, it's really pretty simple.  If you use the documentation 
