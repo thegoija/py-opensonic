@@ -27,7 +27,6 @@ import os
 
 from . import errors
 from .media.podcast_channel import PodcastChannel
-from .media.podcast_episode import PodcastEpisode
 from .media.artist import (Artist, ArtistInfo)
 from .media.song import (Song)
 from .media.album import (Album, AlbumInfo)

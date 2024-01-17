@@ -37,6 +37,26 @@ class PodcastEpisode(MediaBase):
         self._content_type = get_key(info, 'contentType')
         super().__init__(info)
 
+    def to_dict(self):
+        ret = super().to_dict()
+        ret['streamId'] = self._stream_id
+        ret['channelId'] = self._channel_id
+        ret['title'] = self._title
+        ret['description'] = self._description
+        ret['publishDate'] = self._publish_date
+        ret['status'] = self._status
+        ret['parent'] = self._parent
+        ret['isDir'] = self._is_dir
+        ret['year'] = self._year
+        ret['genre'] = self._genre
+        ret['size'] = self._size
+        ret['duration'] = self._duration
+        ret['bitrate'] = self._bitrate
+        ret['path'] = self._path
+        ret['suffix'] = self._suffix
+        ret['contentType'] = self._content_type
+        return ret
+
     stream_id = property(lambda s: s._stream_id)
     channel_id = property(lambda s: s._channel_id)
     title = property(lambda s: s._title)

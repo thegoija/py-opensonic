@@ -1,3 +1,7 @@
+##3.0.3
+
+Give most objects a to_dict() method for easier dumping of values
+
 ##3.0.2
 
 Acutally bump _version.py

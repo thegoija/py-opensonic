@@ -36,6 +36,20 @@ class Playlist(MediaBase):
         self._allowed_users = get_key(info, 'allowedUser')
         super().__init__(info)
 
+    def to_dict(self):
+        ret = super().to_dict()
+        ret['name'] = self._name
+        ret['comment'] = self._comment
+        ret['owner'] = self._owner
+        ret['public'] = self._public
+        ret['soungCount'] = self._song_count
+        ret['created'] = self._created
+        ret['duration'] = self._duration
+        ret['coverArt'] = self._cover_id
+        if self._songs:
+            ret['entry'] = [entry.to_dict() for entry in self._songs]
+        return ret
+
     name = property(lambda s: s._name)
     comment = property(lambda s: s._comment)
     owner = property(lambda s: s._owner)

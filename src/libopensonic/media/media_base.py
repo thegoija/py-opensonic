@@ -35,8 +35,6 @@ class Cover:
 class MediaBase:
     """
     Base class for media items, this class should not be used directly
-
-    conn: 
     """
     def __init__(self, info):
         """
@@ -49,6 +47,9 @@ class MediaBase:
         self._id = info['id']
         self._cover_id = get_key(info, 'coverArt')
         self._cover = None
+
+    def to_dict(self):
+        return {'id': self._id, 'coverId': self.cover_id}
     
     id = property(lambda s: s._id)
     cover_id = property(lambda s: s._cover_id)

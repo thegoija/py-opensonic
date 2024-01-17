@@ -32,6 +32,18 @@ class ArtistInfo:
         if 'similarArtists' in info:
             for entry in info['similarArtists']:
                 self._similar_artists.append(Artist(entry))
+
+    def to_dict(self):
+        ret = {
+            'biography': self._biography,
+            'musicBrainzId': self._mb_id,
+            'smallImageUrl': self._small_url,
+            'mediumImageUrl': self._med_url,
+            'largeImageUrl': self._large_url
+        }
+        if self._similar_artists:
+            ret['similarArtists'] = [entry.to_dict() for entry in self._similar_artists]
+        return ret
     
     biography = property(lambda s: s._biography)
     mb_id = property(lambda s: s._mb_id)
@@ -65,6 +77,19 @@ class Artist(MediaBase):
             for entry in info['album']:
                 self._albums.append(Album(entry))
         super().__init__(info)
+
+    def to_dict(self):
+        ret = super().to_dict()
+        ret['albumCount'] = self._album_count
+        ret['starred'] = self._starred
+        ret['name'] = self._name
+        if self._info is not None:
+            ret['info'] = self._info.to_dict()
+        ret['sortName'] = self._sort_name
+        ret['roles'] = self._roles
+        if self._albums:
+            ret['album'] = [entry.to_dict() for entry in self._albums]
+        return ret
 
     album_count = property(lambda s: s._album_count)
     starred = property(lambda s: s._starred)

@@ -58,6 +58,28 @@ class Album(MediaBase):
                 self._songs.append(song.Song(entry))
         super().__init__(info)
 
+    def to_dict(self):
+        ret = super().to_dict()
+        ret['album'] = self._album
+        ret['title'] = self._title
+        ret['name'] = self._name
+        ret['isDir'] = self._is_dir
+        ret['songCount'] = self._song_count
+        ret['created'] = self._created
+        ret['duration'] = self._duration
+        ret['playCount'] = self._play_count
+        ret['artistId'] = self._artist_id
+        ret['artist'] = self._artist
+        ret['year'] = self._year
+        ret['genre'] = self._genre
+        ret['starred'] = self._starred
+        ret['played'] = self._played
+        ret['userRating'] = self._user_rating
+        ret['parent'] = self._parent
+        if self._songs:
+            ret['song'] = [entry.to_dict() for entry in self._songs]
+        return ret
+
     parent = property(lambda s: s._parent)
     album = property(lambda s: s._album)
     title = property(lambda s: s._title)
