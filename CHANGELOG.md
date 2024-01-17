@@ -1,3 +1,7 @@
+##3.0.5
+
+Fat fingered a release...
+
 ##3.0.3
 
 Give most objects a to_dict() method for easier dumping of values
