@@ -1,3 +1,7 @@
+##4.0.7
+
+Fix path handling for empty and trailing / cases.
+
 ##4.0.6
 
 Check the http status code before trying to use the Response object.

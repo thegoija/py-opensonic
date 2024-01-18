@@ -157,7 +157,10 @@ class Connection:
 
 
     def setServerPath(self, path):
-        self._serverPath = path.strip('/') + '/rest'
+        sep = ''
+        if path != '' and not path.endswith('/'):
+            sep = '/'
+        self._serverPath = f"{path}{sep}rest".strip('/')
     serverPath = property(lambda s: s._serverPath, setServerPath)
 
 
