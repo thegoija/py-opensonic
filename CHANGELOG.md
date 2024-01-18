@@ -1,3 +1,7 @@
+##4.0.6
+
+Check the http status code before trying to use the Response object.
+
 ##4.0.5
 
 Fiddly bits of packaging...
