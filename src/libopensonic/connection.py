@@ -2451,20 +2451,22 @@ class Connection:
         url = f"{self._baseUrl}:{self._port}/{self._serverPath}/{methodName}"
 
         if self._useGET:
-            res = requests.get(url, params=qdict)
+            res = requests.get(url, params=qdict, timeout=(60,300))
         else:
-            res = requests.post(url, data=qdict)
+            res = requests.post(url, data=qdict, timeout=(60,300))
 
         return res
 
 
     def _handleInfoRes(self, res):
         # Returns a parsed dictionary version of the result
+        res.raise_for_status()
         dres = res.json()
         return dres['subsonic-response']
 
 
     def _handleBinRes(self, res):
+        res.raise_for_status()
         contType = res.headers['Content-Type'] if 'Content-Type' in res.headers else None
 
         if contType:
