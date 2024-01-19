@@ -28,6 +28,7 @@ class ArtistInfo:
         self._small_url = get_key(info, 'smallImageUrl')
         self._med_url = get_key(info, 'mediumImageUrl')
         self._large_url = get_key(info, 'largeImageUrl')
+        self._lastfm_url = get_key(info, 'lastFmUrl')
         self._similar_artists = []
         if 'similarArtists' in info:
             for entry in info['similarArtists']:
@@ -39,7 +40,8 @@ class ArtistInfo:
             'musicBrainzId': self._mb_id,
             'smallImageUrl': self._small_url,
             'mediumImageUrl': self._med_url,
-            'largeImageUrl': self._large_url
+            'largeImageUrl': self._large_url,
+            'lastFmUrl': self._lastfm_url
         }
         if self._similar_artists:
             ret['similarArtists'] = [entry.to_dict() for entry in self._similar_artists]
@@ -50,6 +52,7 @@ class ArtistInfo:
     small_url = property(lambda s: s._small_url)
     med_url = property(lambda s: s._med_url)
     large_url = property(lambda s:s._large_url)
+    lastfm_url = property(lambda s:s._lastfm_url)
     similar_artists = property(lambda s:s._similar_artists)
 
 
@@ -69,7 +72,9 @@ class Artist(MediaBase):
         self._album_count = get_key(info, 'albumCount')
         self._starred = get_key(info, 'starred')
         self._name = self.get_required_key(info, 'name')
+        self._sort_name = self.get_required_key(info, 'sortName')
         self._info = None
+        self._artist_image_url = get_key(info, 'artistImageUrl')
         self._sort_name = get_key(info, 'sortName')
         self._roles = get_key(info, 'roles')
         self._albums = []
@@ -82,7 +87,9 @@ class Artist(MediaBase):
         ret = super().to_dict()
         ret['albumCount'] = self._album_count
         ret['starred'] = self._starred
+        ret['sortName'] = self._sort_name
         ret['name'] = self._name
+        ret['artistImageUrl'] = self._artist_image_url
         if self._info is not None:
             ret['info'] = self._info.to_dict()
         ret['sortName'] = self._sort_name
@@ -92,8 +99,10 @@ class Artist(MediaBase):
         return ret
 
     album_count = property(lambda s: s._album_count)
+    artist_image_url = property(lambda s: s._artist_image_url)
     starred = property(lambda s: s._starred)
     name = property(lambda s: s._name)
+    sort_name = property(lambda s: s._sort_name)
     albums = property(lambda s: s._albums)
     def set_info(self, info: ArtistInfo):
         self._info = info

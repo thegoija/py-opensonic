@@ -22,6 +22,7 @@ class AlbumInfo:
     def __init__(self, info):
         self._notes = get_key(info, 'notes')
         self._mb_id = get_key(info, 'musicBrainzId')
+        self._lastfm_url = get_key(info, 'lastFmUrl')
         self._small_url = get_key(info, 'smallImageUrl')
         self._med_url = get_key(info, 'mediumImageUrl')
         self._large_url = get_key(info, 'largeImageUrl')
@@ -37,12 +38,11 @@ class Album(MediaBase):
     def __init__(self, info):
         self._parent = get_key(info, 'parent')
         self._album = get_key(info, 'album')
-        self._title = get_key(info, 'title')
         self._name = self.get_required_key(info, 'name')
         self._is_dir = get_key(info, 'isDir')
-        self._song_count = self.get_required_key(info, 'songCount')
+        self._song_count = int(self.get_required_key(info, 'songCount'))
         self._created = self.get_required_key(info, 'created')
-        self._duration = self.get_required_key(info, 'duration')
+        self._duration = int(self.get_required_key(info, 'duration'))
         self._play_count = get_key(info, 'playCount')
         self._artist_id = get_key(info, 'artistId')
         self._artist = get_key(info, 'artist')
@@ -61,7 +61,6 @@ class Album(MediaBase):
     def to_dict(self):
         ret = super().to_dict()
         ret['album'] = self._album
-        ret['title'] = self._title
         ret['name'] = self._name
         ret['isDir'] = self._is_dir
         ret['songCount'] = self._song_count
@@ -82,7 +81,6 @@ class Album(MediaBase):
 
     parent = property(lambda s: s._parent)
     album = property(lambda s: s._album)
-    title = property(lambda s: s._title)
     name = property(lambda s: s._name)
     is_dir = property(lambda s: s._is_dir)
     song_count = property(lambda s: s._song_count)
