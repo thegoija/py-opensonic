@@ -1,3 +1,7 @@
+##5.0.1
+
+Protect against empty album lists in getAlbumList*
+
 ##5.0.0
 
 Fix Album object to align to open subsonic specification, also update Artist object

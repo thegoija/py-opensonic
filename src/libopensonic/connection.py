@@ -1080,6 +1080,8 @@ class Connection:
         res = self._doRequest(methodName, q)
         dres = self._handleInfoRes(res)
         self._checkStatus(dres)
+        if 'album' not in dres['albumList']:
+            return []
         return [Album(entry) for entry in dres['albumList']['album']]
 
 
@@ -1118,6 +1120,8 @@ class Connection:
         res = self._doRequest(methodName, q)
         dres = self._handleInfoRes(res)
         self._checkStatus(dres)
+        if 'album' not in dres['albumList2']:
+            return []
         return [Album(entry) for entry in dres['albumList2']['album']]
 
 
