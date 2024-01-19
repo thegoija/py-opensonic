@@ -1,3 +1,7 @@
+##5.0.0
+
+Fix Album object to align to open subsonic specification, also update Artist object
+
 ##4.0.7
 
 Fix path handling for empty and trailing / cases.
