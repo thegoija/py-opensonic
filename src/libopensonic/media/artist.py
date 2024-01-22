@@ -23,12 +23,12 @@ class ArtistInfo:
     Holds extra (optional) artist info
     """
     def __init__(self, info):
-        self._biography = get_key(info, 'biography')
-        self._mb_id = info['musicBrainzId']
-        self._small_url = get_key(info, 'smallImageUrl')
-        self._med_url = get_key(info, 'mediumImageUrl')
-        self._large_url = get_key(info, 'largeImageUrl')
-        self._lastfm_url = get_key(info, 'lastFmUrl')
+        self._biography = get_key(info, 'biography', '')
+        self._mb_id = get_key(info, 'musicBrainzId', '')
+        self._small_url = get_key(info, 'smallImageUrl', '')
+        self._med_url = get_key(info, 'mediumImageUrl', '')
+        self._large_url = get_key(info, 'largeImageUrl', '')
+        self._lastfm_url = get_key(info, 'lastFmUrl', '')
         self._similar_artists = []
         if 'similarArtists' in info:
             for entry in info['similarArtists']:

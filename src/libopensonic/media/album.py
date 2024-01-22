@@ -20,12 +20,12 @@ from . import song
 
 class AlbumInfo:
     def __init__(self, info):
-        self._notes = get_key(info, 'notes')
-        self._mb_id = get_key(info, 'musicBrainzId')
-        self._lastfm_url = get_key(info, 'lastFmUrl')
-        self._small_url = get_key(info, 'smallImageUrl')
-        self._med_url = get_key(info, 'mediumImageUrl')
-        self._large_url = get_key(info, 'largeImageUrl')
+        self._notes = get_key(info, 'notes', '')
+        self._mb_id = get_key(info, 'musicBrainzId', '')
+        self._lastfm_url = get_key(info, 'lastFmUrl', '')
+        self._small_url = get_key(info, 'smallImageUrl', '')
+        self._med_url = get_key(info, 'mediumImageUrl', '')
+        self._large_url = get_key(info, 'largeImageUrl', '')
     
     notes = property(lambda s: s._notes)
     mb_id = property(lambda s: s._mb_id)
