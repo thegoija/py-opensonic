@@ -1,3 +1,7 @@
+##5.0.2
+
+Fix ArtistInfo construction, all fields are optional.
+
 ##5.0.1
 
 Protect against empty album lists in getAlbumList*
