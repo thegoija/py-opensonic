@@ -1,3 +1,7 @@
+##5.0.3
+
+More packaging fiddly bits
+
 ##5.0.2
 
 Fix ArtistInfo construction, all fields are optional.
