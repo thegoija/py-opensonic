@@ -17,11 +17,8 @@ along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 
 from netrc import netrc
 from hashlib import md5
-import requests
-from io import StringIO
-
-import json
 import os
+import requests
 
 from . import errors
 from .media.podcast_channel import PodcastChannel
