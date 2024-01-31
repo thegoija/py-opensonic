@@ -22,6 +22,7 @@ import requests
 
 from . import errors
 from .media.podcast_channel import PodcastChannel
+from .media.podcast_channel import PodcastEpisode
 from .media.artist import (Artist, ArtistInfo)
 from .media.song import (Song)
 from .media.album import (Album, AlbumInfo)
@@ -2186,6 +2187,8 @@ class Connection:
         res = self._doRequest(methodName, q)
         dres = self._handleInfoRes(res)
         self._checkStatus(dres)
+        if 'similarSongs' not in dres or 'song' not in dres['similarSongs']:
+            return []
         return [Song(entry) for entry in dres['similarSongs']['song']]
 
 
@@ -2206,6 +2209,8 @@ class Connection:
         res = self._doRequest(methodName, q)
         dres = self._handleInfoRes(res)
         self._checkStatus(dres)
+        if 'similarSongs2' not in dres or 'song' not in dres['similarSongs2']:
+            return []
         return [Song(entry) for entry in dres['similarSongs2']['song']]
 
 
@@ -2260,7 +2265,7 @@ class Connection:
         """
         since 1.13.0
 
-        Returns the top songs for a given artist
+        Returns the top songs for a given artist as a List of media.Song
 
         artist:str      The artist to get songs for
         count:int       The number of songs to return
@@ -2272,14 +2277,16 @@ class Connection:
         res = self._doRequest(methodName, q)
         dres = self._handleInfoRes(res)
         self._checkStatus(dres)
-        return dres
+        if 'topSongs' not in dres or 'song' not in dres['topSongs']:
+            return []
+        return [Song(entry) for entry in dres['topSongs']['song']]
 
 
     def getNewestPodcasts(self, count=20):
         """
         since 1.13.0
 
-        Returns the most recently published Podcast episodes
+        Returns the most recently published Podcast episodes as a list of media.PodcastEpisode
 
         count:int       The number of episodes to return
         """
@@ -2290,7 +2297,9 @@ class Connection:
         res = self._doRequest(methodName, q)
         dres = self._handleInfoRes(res)
         self._checkStatus(dres)
-        return dres
+        if 'newestPodcasts' not in dres or 'episode' not in dres['newestPodcasts']:
+            return []
+        return [PodcastEpisode(entry) for entry in dres['newestPodcasts']['episode']]
 
 
     def getVideoInfo(self, vid):
