@@ -1,3 +1,7 @@
+##5.0.5
+
+Use more sane default values when getting a required key
+
 ##5.0.4
 
 Convert getTopSongs, getSimilarSongs[2], and getNewestPodcasts to use media objects

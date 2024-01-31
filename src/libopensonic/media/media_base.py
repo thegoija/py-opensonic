@@ -46,7 +46,7 @@ class MediaBase:
         info:dict                           A dict from the JSON response to any get request
                                             Must contain fields 'id' and 'coverArt'
         """
-        self._id = self.get_required_key(info, 'id') 
+        self._id = self.get_required_key(info, 'id')
         self._cover_id = get_key(info, 'coverArt')
 
     def to_dict(self):
@@ -55,13 +55,12 @@ class MediaBase:
     @classmethod
     def get_class_name(cls):
         return cls.__name__
-    
+
     id = property(lambda s: s._id)
     cover_id = property(lambda s: s._cover_id)
 
-    def get_required_key(self, store, key):
+    def get_required_key(self, store, key, default=None):
         if key in store:
             return store[key]
         warn(f"{self.get_class_name()} object returned by server is missing required field '{key}'")
-        return None
-
+        return default
