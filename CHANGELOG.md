@@ -1,3 +1,8 @@
+##5.0.4
+
+Convert getTopSongs, getSimilarSongs[2], and getNewestPodcasts to use media objects
+for their return values. Add timeouts to requests.
+
 ##5.0.3
 
 More packaging fiddly bits
