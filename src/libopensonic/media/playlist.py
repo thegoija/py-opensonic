@@ -24,10 +24,10 @@ class Playlist(MediaBase):
         self._comment = get_key(info, 'comment')
         self._owner = get_key(info, 'owner')
         self._public = get_key(info, 'public', False)
-        self._song_count = self.get_required_key(info, 'songCount')
+        self._song_count = self.get_required_key(info, 'songCount', 0)
         self._created = self.get_required_key(info,'created')
         self._changed = self.get_required_key(info, 'changed')
-        self._duration = self.get_required_key(info, 'duration')
+        self._duration = self.get_required_key(info, 'duration', 0)
         self._cover_id = get_key(info, 'coverArt')
         self._songs = []
         if 'entry' in info and info['entry']:

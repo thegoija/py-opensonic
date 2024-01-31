@@ -71,8 +71,8 @@ class Artist(MediaBase):
         """
         self._album_count = get_key(info, 'albumCount')
         self._starred = get_key(info, 'starred')
-        self._name = self.get_required_key(info, 'name')
-        self._sort_name = self.get_required_key(info, 'sortName')
+        self._name = self.get_required_key(info, 'name', '')
+        self._sort_name = self.get_required_key(info, 'sortName', '')
         self._info = None
         self._artist_image_url = get_key(info, 'artistImageUrl')
         self._sort_name = get_key(info, 'sortName')
