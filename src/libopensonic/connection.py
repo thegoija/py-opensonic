@@ -32,6 +32,16 @@ from .media.playlist import Playlist
 API_VERSION = '1.16.1'
 
 
+def pretty_print_post(req):
+    print('{}\n{}\r\n{}\r\n\r\n{}'.format(
+        '-----------START-----------',
+        req.method + ' ' + req.url,
+        '\r\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+        req.body,
+    ))
+
+
+
 class Connection:
     def __init__(self, baseUrl, username=None, password=None, port=4040,
             serverPath='', appName='py-opensonic', apiVersion=API_VERSION,
@@ -2414,9 +2424,9 @@ class Connection:
         url = f"{self._baseUrl}:{self._port}/{self._serverPath}/{methodName}"
 
         if self._useGET:
-            res = requests.get(url, params=qdict, stream=is_stream)
+            res = requests.get(url, params=qdict, stream=is_stream, timeout=(30, 60))
         else:
-            res = requests.post(url, data=qdict, stream=is_stream)
+            res = requests.post(url, data=qdict, stream=is_stream, timeout=(30, 60))
 
         return res
 
@@ -2436,9 +2446,9 @@ class Connection:
         url = f"{self._baseUrl}:{self._port}/{self._serverPath}/{methodName}"
 
         if self._useGET:
-            res = requests.get(url, params=qdict)
+            res = requests.get(url, params=qdict, timeout=(30, 60))
         else:
-            res = requests.post(url, data=qdict)
+            res = requests.post(url, data=qdict, timeout=(30, 60))
 
         return res
 
