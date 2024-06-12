@@ -1,3 +1,9 @@
+##5.1.0
+
+Move the starred field up to MediaBase giving all media items the ability to be
+starred. It is possible that Podcast Channels cannot be starred in the spec but this
+should not cause serious issue.
+
 ##5.0.5
 
 Use more sane default values when getting a required key

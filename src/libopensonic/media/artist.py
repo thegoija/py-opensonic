@@ -66,11 +66,10 @@ class Artist(MediaBase):
 
         info:dict                   A dict from the JSON response to getArtist
                                     Must contain fields for MediaBase and 'name',
-                                    'starred, 'albumCount', and 'album' though 'album'
+                                    'albumCount', and 'album' though 'album'
                                     is a list and can be an empty one
         """
         self._album_count = get_key(info, 'albumCount')
-        self._starred = get_key(info, 'starred')
         self._name = self.get_required_key(info, 'name', '')
         self._sort_name = self.get_required_key(info, 'sortName', '')
         self._info = None
@@ -86,7 +85,6 @@ class Artist(MediaBase):
     def to_dict(self):
         ret = super().to_dict()
         ret['albumCount'] = self._album_count
-        ret['starred'] = self._starred
         ret['sortName'] = self._sort_name
         ret['name'] = self._name
         ret['artistImageUrl'] = self._artist_image_url
@@ -100,7 +98,6 @@ class Artist(MediaBase):
 
     album_count = property(lambda s: s._album_count)
     artist_image_url = property(lambda s: s._artist_image_url)
-    starred = property(lambda s: s._starred)
     name = property(lambda s: s._name)
     sort_name = property(lambda s: s._sort_name)
     albums = property(lambda s: s._albums)
