@@ -48,7 +48,6 @@ class Album(MediaBase):
         self._artist = get_key(info, 'artist')
         self._year = get_key(info, 'year')
         self._genre = get_key(info, 'genre')
-        self._starred = get_key(info, 'starred')
         self._played = get_key(info, 'played')
         self._user_rating = get_key(info, 'userRating')
         self._songs = []
@@ -71,7 +70,6 @@ class Album(MediaBase):
         ret['artist'] = self._artist
         ret['year'] = self._year
         ret['genre'] = self._genre
-        ret['starred'] = self._starred
         ret['played'] = self._played
         ret['userRating'] = self._user_rating
         ret['parent'] = self._parent
@@ -85,7 +83,6 @@ class Album(MediaBase):
     is_dir = property(lambda s: s._is_dir)
     song_count = property(lambda s: s._song_count)
     created = property(lambda s: s._created)
-    starred = property(lambda s: s._starred)
     duration = property(lambda s: s._duration)
     play_count = property(lambda s: s._play_count)
     artist_id = property(lambda s: s._artist_id)

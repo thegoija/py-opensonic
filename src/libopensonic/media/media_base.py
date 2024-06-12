@@ -44,13 +44,18 @@ class MediaBase:
         (e.g. Songs, Albums, Artists, Podcasts, etc)
 
         info:dict                           A dict from the JSON response to any get request
-                                            Must contain fields 'id' and 'coverArt'
+                                            Must contain id field
+                                            May contain coverArt and starred field
         """
         self._id = self.get_required_key(info, 'id')
         self._cover_id = get_key(info, 'coverArt')
+        self._starred = get_key(info, 'starred')
 
     def to_dict(self):
-        return {'id': self._id, 'coverId': self.cover_id}
+        """
+        Return a dictonary representation of self.
+        """
+        return {'id': self._id, 'coverId': self._cover_id, 'starred': self._starred}
 
     @classmethod
     def get_class_name(cls):
@@ -58,8 +63,12 @@ class MediaBase:
 
     id = property(lambda s: s._id)
     cover_id = property(lambda s: s._cover_id)
+    starred = property(lambda s: s._starred)
 
     def get_required_key(self, store, key, default=None):
+        """
+        Used when parsing server returns for keys that are marked required by the specification.
+        """
         if key in store:
             return store[key]
         warn(f"{self.get_class_name()} object returned by server is missing required field '{key}'")
