@@ -1,3 +1,7 @@
+##5.1.1
+
+Relax requirement on responses package.
+
 ##5.1.0
 
 Move the starred field up to MediaBase giving all media items the ability to be
