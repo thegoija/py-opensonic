@@ -46,6 +46,7 @@ class Song(MediaBase):
         self._is_video = get_key(info, 'isVideo')
         self._path = get_key(info, 'path')
         self._track = get_key(info, 'track', 1)
+        self._disc_number = get_key(info, 'discNumber' 1)
         self._type = get_key(info, 'type')
         self._year = get_key(info, 'year')
         super().__init__(info)
@@ -69,6 +70,7 @@ class Song(MediaBase):
         ret['contentType'] = self._content_type
         ret['isVideo'] = self._is_video
         ret['path'] = self._path
+        ret['discNumber'] = self._disc_number
         ret['track'] = self._track
         ret['type'] = self._type
         ret['year'] = self._year
@@ -100,3 +102,4 @@ class Song(MediaBase):
     track = property(lambda s: s._track)
     type = property(lambda s: s._type)
     year = property(lambda s: s._year)
+    disc_number = property(lambda s: s._disc_number)
