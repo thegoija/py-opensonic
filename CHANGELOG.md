@@ -1,3 +1,8 @@
+##5.2.0
+
+Remove warning on missing artist Sort Name field as this field is not required by the
+spec. Include disc number in tracks to handle multi-disc albums.
+
 ##5.1.1
 
 Relax requirement on responses package.
