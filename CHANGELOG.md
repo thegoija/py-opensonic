@@ -1,3 +1,7 @@
+##5.2.1
+
+Add missing comma in song.py because dufus
+
 ##5.2.0
 
 Remove warning on missing artist Sort Name field as this field is not required by the
