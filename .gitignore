@@ -5,3 +5,4 @@ dist
 build
 py_opensonic.egg-info
 .vscode
+.venv
