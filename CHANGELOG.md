@@ -1,3 +1,7 @@
+##5.3.0
+
+Add transcoding fields to song
+
 ##5.2.1
 
 Add missing comma in song.py because dufus
