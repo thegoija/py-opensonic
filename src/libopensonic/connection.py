@@ -136,7 +136,10 @@ class Connection:
     # Properties
     def setBaseUrl(self, url):
         self._baseUrl = url
-        self._hostname = url.split('://')[1].strip()
+        if '://' in url:
+            self._hostname = url.split('://')[1].strip()
+        else:
+            self._hostname = url
     baseUrl = property(lambda s: s._baseUrl, setBaseUrl)
 
 
