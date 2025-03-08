@@ -49,6 +49,8 @@ class Song(MediaBase):
         self._disc_number = get_key(info, 'discNumber', 1)
         self._type = get_key(info, 'type')
         self._year = get_key(info, 'year')
+        self._transcoded_content_type = get_key(info, 'transcodedContentType')
+        self._transcoded_suffix = get_key(info, 'transcodedSuffix')
         super().__init__(info)
 
     def to_dict(self):
@@ -74,6 +76,8 @@ class Song(MediaBase):
         ret['track'] = self._track
         ret['type'] = self._type
         ret['year'] = self._year
+        ret['transcodedContentType'] = self._transcoded_content_type
+        ret['transcodedSuffix'] = self._transcoded_suffix
         if self._artists:
             ret['artists'] = [entry.to_dict() for entry in self.artists]
         if self._album_artists:
@@ -103,3 +107,5 @@ class Song(MediaBase):
     type = property(lambda s: s._type)
     year = property(lambda s: s._year)
     disc_number = property(lambda s: s._disc_number)
+    transcoded_content_type = property(lambda s: s._transcoded_contrant_type)
+    transcoded_suffix = property(lambda s: s._transcoded_suffix)
