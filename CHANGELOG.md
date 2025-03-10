@@ -1,6 +1,13 @@
+##5.3.1
+
+Silly typo in song.py
+Import Connection to make the example script work
+
 ##5.3.0
 
 Add transcoding fields to song
+Don't throw an exception when the URL does not contain a protocol header
+
 
 ##5.2.1
 
