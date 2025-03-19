@@ -134,10 +134,12 @@ class Connection:
                 'combination or "useNetrc" must be either True or a string '
                 'representing a path to a netrc file')
 
-        self.setPort(port)
-        self.setAppName(appName)
-        self.setServerPath(serverPath)
-        self.setInsecure(insecure)
+        self._port = int(port)
+        self._apiVersion = apiVersion
+        self._appName = appName
+        self._serverPath = serverPath.strip('/')
+        self._insecure = insecure
+        self._opener = self._getOpener(self._username, self._rawPass)
 
 
     # Properties
@@ -205,14 +207,18 @@ class Connection:
         Returns a boolean True if the server is alive, False otherwise
         """
         methodName = 'ping'
+        viewName = '%s.view' % methodName
 
-        res = self._doRequest(methodName)
-        dres = self._handleInfoRes(res)
-        if dres['status'] == 'ok':
+        req = self._doRequest(viewName)
+        try:
+            res = self._doInfoReq(req)
+        except:
+            return False
+        if res['status'] == 'ok':
             return True
-        elif dres['status'] == 'failed':
-            exc = errors.getExcByCode(dres['error']['code'])
-            raise exc(dres['error']['message'])
+        elif res['status'] == 'failed':
+            exc = errors.getExcByCode(res['error']['code'])
+            raise exc(res['error']['message'])
         return False
 
 
