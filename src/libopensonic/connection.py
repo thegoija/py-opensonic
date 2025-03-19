@@ -2399,6 +2399,9 @@ class Connection:
     #
     # Private internal methods
     #
+    def _getOpener(self, username, passwd):
+        return urllib.request.build_opener()
+
     def _getQueryDict(self, d):
         """
         Given a dictionary, it cleans out all the values set to None
