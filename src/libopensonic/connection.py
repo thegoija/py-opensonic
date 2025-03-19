@@ -17,6 +17,8 @@ along with py-opensonic.  If not, see <http://www.gnu.org/licenses/>
 
 from netrc import netrc
 from hashlib import md5
+import urllib.request
+import urllib.error
 import os
 import requests
 
@@ -44,7 +46,7 @@ def pretty_print_post(req):
 
 class Connection:
     def __init__(self, baseUrl, username=None, password=None, port=4040,
-            serverPath='', appName='py-opensonic', apiVersion=API_VERSION,
+            serverPath='/rest', appName='py-opensonic', apiVersion=API_VERSION,
             insecure=False, useNetrc=None, legacyAuth=False, useGET=False, useViews=True, salt=None, token=None):
         """
         This will create a connection to your subsonic server
@@ -1666,7 +1668,7 @@ class Connection:
         return ret
 
 
-    def updatePlaylist(self, lid, name=None, comment=None, songIdsToAdd=None,
+    def updatePlaylist(self, lid, name=None, comment=None, songIdsToAdd=None, public=None,
             songIndexesToRemove=None):
         """
         since 1.8.0
@@ -1694,7 +1696,7 @@ class Connection:
         if songIndexesToRemove is None:
             songIndexesToRemove = []
 
-        q = self._getQueryDict({'playlistId': lid, 'name': name,
+        q = self._getQueryDict({'playlistId': lid, 'name': name, 'public': public,
             'comment': comment})
         if not isinstance(songIdsToAdd, list) or isinstance(songIdsToAdd,
                 tuple):
